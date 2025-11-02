@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+@theme {
+  --color-clinic-green: #006400;
+  --color-clinic-green-hover: #004d00;
+  --color-clinic-orange: #FF8C00;
+  --color-clinic-orange-brown: #D2691E;
+  --color-search-green: #4CAF50;
+  --color-search-green-hover: #45a049;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+button {
+  font-family: inherit;
+}
