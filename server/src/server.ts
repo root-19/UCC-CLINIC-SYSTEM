@@ -4,6 +4,8 @@ import dotenv from 'dotenv';
 import './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import requestRoutes from './routes/requestRoutes.js';
+import inventoryRoutes from './routes/inventoryRoutes.js';
+import registrationRoutes from './routes/registrationRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -19,6 +21,8 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/requests', requestRoutes);
+app.use('/api/inventory', inventoryRoutes);
+app.use('/api/registrations', registrationRoutes);
 
 // Basic health check route
 app.get('/health', (req, res) => {

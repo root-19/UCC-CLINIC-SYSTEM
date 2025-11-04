@@ -23,10 +23,10 @@ const AdminSidebar = ({ isOpen = true, onClose }: AdminSidebarProps) => {
   const navItems: NavItem[] = [
     { label: 'Dashboard', path: '/admin/home' },
     { label: 'Clinic Inventory', path: '/admin/inventory' },
-    { label: 'Registration', path: '/admin/registration' },
-    { label: 'Students Record', path: '/admin/students' },
+    { label: 'Student Record', path: '/admin/registration' },
+    { label: 'Notification', path: '/admin/notification' },
     { label: 'Requested Form', path: '/admin/requested-form' },
-    { label: 'Staff Schedule', path: '/admin/staff-schedule' },
+    // { label: 'Staff Schedule', path: '/admin/staff-schedule' },
     { label: 'Monthly Report', path: '/admin/monthly-report' },
   ];
 
