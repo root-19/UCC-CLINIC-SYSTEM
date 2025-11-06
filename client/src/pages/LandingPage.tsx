@@ -5,6 +5,7 @@ import Hero from '../components/Hero';
 import Modal from '../components/Modal';
 import LoginModal from '../components/LoginModal';
 import RequestFormModal from '../components/RequestFormModal';
+import BlogModal from '../components/BlogModal';
 import OrganizationalChart from '../components/OrganizationalChart';
 import { useAuth } from '../context/AuthContext';
 
@@ -12,6 +13,7 @@ const LandingPage = () => {
   const [isAboutUsModalOpen, setIsAboutUsModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isRequestFormModalOpen, setIsRequestFormModalOpen] = useState(false);
+  const [isBlogModalOpen, setIsBlogModalOpen] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -37,6 +39,10 @@ const LandingPage = () => {
     setIsRequestFormModalOpen(true);
   };
 
+  const handleBlogClick = () => {
+    setIsBlogModalOpen(true);
+  };
+
   const handleCloseModal = () => {
     setIsAboutUsModalOpen(false);
   };
@@ -47,6 +53,10 @@ const LandingPage = () => {
 
   const handleCloseRequestFormModal = () => {
     setIsRequestFormModalOpen(false);
+  };
+
+  const handleCloseBlogModal = () => {
+    setIsBlogModalOpen(false);
   };
 
   const handleLoginSuccess = (userData: any) => {
@@ -61,6 +71,7 @@ const LandingPage = () => {
         onAboutUsClick={handleAboutUsClick}
         onLoginClick={handleLoginClick}
         onRequestFormClick={handleRequestFormClick}
+        onBlogClick={handleBlogClick}
       />
       <Hero 
         title="Clinic Access and Record Enhancements System"
@@ -84,6 +95,11 @@ const LandingPage = () => {
       <RequestFormModal
         isOpen={isRequestFormModalOpen}
         onClose={handleCloseRequestFormModal}
+      />
+
+      <BlogModal
+        isOpen={isBlogModalOpen}
+        onClose={handleCloseBlogModal}
       />
     </div>
   );

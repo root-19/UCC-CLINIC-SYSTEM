@@ -14,12 +14,17 @@ const Header = ({
   onSearchClick,
   onAboutUsClick,
   onLoginClick,
-  onRequestFormClick
+  onRequestFormClick,
+  onBlogClick
 }: HeaderProps) => {
   const handleLinkClick = (label: string, e: React.MouseEvent) => {
     if (label === 'About Us' && onAboutUsClick) {
       e.preventDefault();
       onAboutUsClick();
+    }
+    if (label === 'Blog' && onBlogClick) {
+      e.preventDefault();
+      onBlogClick();
     }
     if (label.toLowerCase() === 'login' && onLoginClick) {
       e.preventDefault();
