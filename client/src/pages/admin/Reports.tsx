@@ -285,12 +285,15 @@ const Reports = () => {
                                 cx="50%"
                                 cy="50%"
                                 labelLine={false}
-                                label={({ medication, requests }) => `${medication}: ${requests}`}
+                                label={(props: any) => {
+                                  const { medication, requests } = props;
+                                  return `${medication}: ${requests}`;
+                                }}
                                 outerRadius={120}
                                 fill="#8884d8"
                                 dataKey="requests"
                               >
-                                {reportData.medicationData.map((entry, index) => (
+                                {reportData.medicationData.map((_, index) => (
                                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                 ))}
                               </Pie>

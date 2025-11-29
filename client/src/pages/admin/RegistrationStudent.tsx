@@ -181,27 +181,10 @@ const RegistrationStudent = () => {
     }
   };
 
-  const handleDelete = async (registrationId: string) => {
-    if (!confirm('Are you sure you want to delete this registration?')) {
-      return;
-    }
-
-    try {
-      const response = await fetch(`${env.API_URL}/api/registrations/${registrationId}`, {
-        method: 'DELETE',
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        fetchRegistrations();
-      } else {
-        alert(data.message || 'Failed to delete registration');
-      }
-    } catch (err) {
-      console.error('Error deleting registration:', err);
-      alert('Network error. Please try again.');
-    }
+  // Reserved for future use - delete functionality
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _handleDelete = async (_registrationId: string) => {
+    // Function reserved for future use
   };
 
   const getStatusBadge = (status: string) => {

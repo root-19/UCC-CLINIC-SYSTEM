@@ -15,7 +15,6 @@ const Header = ({
   onAboutUsClick,
   onLoginClick,
   onRequestFormClick,
-  onBlogClick,
   onAnnouncementsClick
 }: HeaderProps) => {
   const handleLinkClick = (label: string, e: React.MouseEvent) => {
@@ -47,7 +46,7 @@ const Header = ({
         
         <div className="flex items-center gap-8">
           <nav className="hidden md:flex gap-6 items-center">
-            {navLinks.map((link, index) => (
+            {navLinks.map((link) => (
               <Link 
                 key={link.path} 
                 to={link.path} 

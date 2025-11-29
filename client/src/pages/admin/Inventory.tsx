@@ -81,7 +81,6 @@ const Inventory = () => {
 
   // Check for expiration notifications
   const checkExpirationNotifications = (items: InventoryItem[]) => {
-    const today = new Date();
     const oneMonthFromNow = new Date();
     oneMonthFromNow.setMonth(oneMonthFromNow.getMonth() + 1);
     

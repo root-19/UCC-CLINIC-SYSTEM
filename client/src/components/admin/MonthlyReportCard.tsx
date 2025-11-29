@@ -60,7 +60,7 @@ const MonthlyReportCard = ({ onClick }: MonthlyReportCardProps) => {
                 fill="#8884d8"
                 dataKey="value"
               >
-              {data.map((entry, index) => (
+              {data.map((_, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index]} />
               ))}
             </Pie>

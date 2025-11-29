@@ -96,7 +96,7 @@ interface OrgBoxProps {
   level: number;
 }
 
-const OrgBox = ({ person, level }: OrgBoxProps) => {
+const OrgBox = ({ person }: OrgBoxProps) => {
   return (
     <div className="bg-gradient-to-br from-white to-gray-50 border-2 border-gray-300 rounded-xl shadow-professional p-4 min-w-[250px] max-w-[300px] flex items-center gap-3 hover:shadow-professional-lg hover:-translate-y-1 transition-all duration-300 card-hover animate-fade-in-up">
       {/* Person Icon */}
