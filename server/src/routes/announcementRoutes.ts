@@ -5,7 +5,7 @@ import {
   getAnnouncementByCategory,
   updateAnnouncement,
   deleteAnnouncement,
-} from '../controllers/announcementController.ts';
+} from '../controllers/announcementController.js';
 import { upload } from '../middleware/upload.js';
 
 const router = express.Router();
