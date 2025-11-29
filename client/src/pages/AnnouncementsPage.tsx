@@ -78,10 +78,6 @@ const AnnouncementsPage = () => {
     navigate('/');
   };
 
-  const handleBlogClick = () => {
-    navigate('/');
-  };
-
   const handleAnnouncementsClick = () => {
     // Already on announcements page
   };
@@ -93,7 +89,6 @@ const AnnouncementsPage = () => {
         onAboutUsClick={handleAboutUsClick}
         onLoginClick={handleLoginClick}
         onRequestFormClick={handleRequestFormClick}
-        onBlogClick={handleBlogClick}
         onAnnouncementsClick={handleAnnouncementsClick}
       />
       

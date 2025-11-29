@@ -41,10 +41,6 @@ const LandingPage = () => {
     setIsRequestFormModalOpen(true);
   };
 
-  const handleBlogClick = () => {
-    setIsBlogModalOpen(true);
-  };
-
   const handleAnnouncementsClick = () => {
     setIsAnnouncementsModalOpen(true);
   };
@@ -81,7 +77,6 @@ const LandingPage = () => {
         onAboutUsClick={handleAboutUsClick}
         onLoginClick={handleLoginClick}
         onRequestFormClick={handleRequestFormClick}
-        onBlogClick={handleBlogClick}
         onAnnouncementsClick={handleAnnouncementsClick}
       />
       <Hero 

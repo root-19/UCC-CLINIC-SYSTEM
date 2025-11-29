@@ -12,7 +12,6 @@ export interface HeaderProps {
   onAboutUsClick?: () => void;
   onLoginClick?: () => void;
   onRequestFormClick?: () => void;
-  onBlogClick?: () => void;
   onAnnouncementsClick?: () => void;
 }
 
