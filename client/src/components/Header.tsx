@@ -16,8 +16,10 @@ const Header = ({
   onLoginClick,
   onRequestFormClick,
   onAnnouncementsClick,
-  onBlogClick: _onBlogClick // Unused but kept for type compatibility
+  onBlogClick: _onBlogClick
 }: HeaderProps) => {
+  // Suppress unused parameter warning
+  void _onBlogClick;
   const handleLinkClick = (label: string, e: React.MouseEvent) => {
     if (label === 'About Us' && onAboutUsClick) {
       e.preventDefault();

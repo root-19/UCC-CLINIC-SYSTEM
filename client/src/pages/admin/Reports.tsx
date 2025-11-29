@@ -281,11 +281,11 @@ const Reports = () => {
                           <ResponsiveContainer width="100%" height={400}>
                             <PieChart>
                               <Pie
-                                data={reportData.medicationData as any}
+                                data={reportData.medicationData as unknown as Array<Record<string, unknown>>}
                                 cx="50%"
                                 cy="50%"
                                 labelLine={false}
-                                label={(props: any) => {
+                                label={(props: unknown) => {
                                   const data = props as MedicationData;
                                   return `${data.medication}: ${data.requests}`;
                                 }}
