@@ -36,8 +36,8 @@ const OrganizationalChart = ({ className = '' }: OrgChartProps) => {
   ];
 
   return (
-    <div className={`organizational-chart ${className}`}>
-      <div className="text-center mb-8">
+    <div className={`organizational-chart ${className} animate-fade-in`}>
+      <div className="text-center mb-8 animate-fade-in-up animate-delay-100">
         <h3 className="text-3xl font-bold text-clinic-green mb-2">
           School Clinic Organizational Chart
         </h3>
@@ -98,9 +98,9 @@ interface OrgBoxProps {
 
 const OrgBox = ({ person, level }: OrgBoxProps) => {
   return (
-    <div className="bg-white border-2 border-gray-300 rounded-lg shadow-md p-4 min-w-[250px] max-w-[300px] flex items-center gap-3 hover:shadow-lg transition-shadow">
+    <div className="bg-gradient-to-br from-white to-gray-50 border-2 border-gray-300 rounded-xl shadow-professional p-4 min-w-[250px] max-w-[300px] flex items-center gap-3 hover:shadow-professional-lg hover:-translate-y-1 transition-all duration-300 card-hover animate-fade-in-up">
       {/* Person Icon */}
-      <div className="w-12 h-12 bg-black rounded-full flex items-center justify-center flex-shrink-0">
+      <div className="w-12 h-12 bg-gradient-to-br from-clinic-green to-clinic-green-hover rounded-full flex items-center justify-center flex-shrink-0 shadow-md transition-transform duration-300 hover:scale-110">
         <svg
           className="w-8 h-8 text-white"
           fill="currentColor"

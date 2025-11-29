@@ -103,12 +103,12 @@ const AdminTopBar = ({ onMenuClick }: AdminTopBarProps) => {
   };
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200 h-14 sm:h-16 flex items-center justify-between px-3 sm:px-6">
+    <header className="bg-white/95 backdrop-blur-md shadow-professional border-b border-gray-200 h-14 sm:h-16 flex items-center justify-between px-3 sm:px-6 animate-fade-in">
       <div className="flex items-center gap-2 sm:gap-3">
         {/* Mobile Menu Button */}
         <button
           onClick={onMenuClick}
-          className="lg:hidden p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
+          className="lg:hidden p-2 text-gray-600 hover:text-clinic-green hover:bg-gray-100 rounded-lg transition-all duration-300 hover:rotate-90"
           aria-label="Open menu"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -116,9 +116,9 @@ const AdminTopBar = ({ onMenuClick }: AdminTopBarProps) => {
           </svg>
         </button>
 
-        <Link to="/admin/home" className="flex items-center gap-2 sm:gap-3">
-          <img src={logoClinic} alt="UCC CLINIC Logo" className="h-6 sm:h-8 w-auto object-contain" />
-          <span className="text-base sm:text-xl font-bold text-gray-900 hidden xs:inline">UCC CLINIC</span>
+        <Link to="/admin/home" className="flex items-center gap-2 sm:gap-3 group transition-transform duration-300 hover:scale-105">
+          <img src={logoClinic} alt="UCC CLINIC Logo" className="h-6 sm:h-8 w-auto object-contain transition-transform duration-300 group-hover:rotate-3" />
+          <span className="text-base sm:text-xl font-bold text-clinic-green hidden xs:inline transition-colors duration-300 group-hover:text-clinic-green-hover">UCC CLINIC</span>
         </Link>
       </div>
       
@@ -127,7 +127,7 @@ const AdminTopBar = ({ onMenuClick }: AdminTopBarProps) => {
         <div className="relative" ref={notificationRef}>
           <button
             onClick={handleNotificationClick}
-            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors relative"
+            className="p-2 text-gray-600 hover:text-clinic-green hover:bg-gray-100 rounded-full transition-all duration-300 relative hover:scale-110 hover:rotate-12"
             aria-label="Notifications"
           >
             <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -202,7 +202,7 @@ const AdminTopBar = ({ onMenuClick }: AdminTopBarProps) => {
         {/* User Profile */}
         <div className="flex items-center gap-1 sm:gap-2">
           <button
-            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-red-400 rounded-full transition-colors"
+            className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-full transition-all duration-300 hover:scale-110"
             aria-label="User Profile"
             onClick={handleLogout}
           >

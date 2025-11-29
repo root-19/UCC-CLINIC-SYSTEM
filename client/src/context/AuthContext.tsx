@@ -1,5 +1,5 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { createContext, useContext, useState, useEffect } from 'react';
+import type { ReactNode } from 'react';
 
 interface User {
   id: string;
@@ -12,26 +12,65 @@ interface User {
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
+  isLoading: boolean;
   login: (userData: User) => void;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  useEffect(() => {
-    // Check if user is authenticated on mount
+// Helper function to get initial auth state from localStorage
+const getInitialAuthState = () => {
+  try {
     const storedUser = localStorage.getItem('user');
     const storedAuth = localStorage.getItem('isAuthenticated');
     
     if (storedUser && storedAuth === 'true') {
-      setUser(JSON.parse(storedUser));
-      setIsAuthenticated(true);
+      const userData = JSON.parse(storedUser);
+      return {
+        user: userData,
+        isAuthenticated: true,
+      };
     }
-  }, []);
+  } catch (error) {
+    console.error('Error reading auth state from localStorage:', error);
+    // Clear invalid data
+    localStorage.removeItem('user');
+    localStorage.removeItem('isAuthenticated');
+  }
+  
+  return {
+    user: null,
+    isAuthenticated: false,
+  };
+};
+
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  // Initialize state from localStorage immediately (synchronously)
+  const initialState = getInitialAuthState();
+  const [user, setUser] = useState<User | null>(initialState.user);
+  const [isAuthenticated, setIsAuthenticated] = useState(initialState.isAuthenticated);
+  const [isLoading] = useState(false);
+
+  // Verify localStorage integrity on mount (safety check)
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    const storedAuth = localStorage.getItem('isAuthenticated');
+    
+    // If localStorage has invalid data, clean it up
+    if (storedUser && storedAuth === 'true') {
+      try {
+        JSON.parse(storedUser); // Just verify it's valid JSON
+      } catch (error) {
+        console.error('Error parsing stored user data:', error);
+        // Clear invalid data
+        localStorage.removeItem('user');
+        localStorage.removeItem('isAuthenticated');
+        setUser(null);
+        setIsAuthenticated(false);
+      }
+    }
+  }, []); // Only run once on mount
 
   const login = (userData: User) => {
     setUser(userData);
@@ -48,7 +87,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, isLoading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

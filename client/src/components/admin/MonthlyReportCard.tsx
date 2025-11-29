@@ -43,10 +43,10 @@ const MonthlyReportCard = ({ onClick }: MonthlyReportCardProps) => {
   };
 
   return (
-    <div className="bg-[#D2691E] rounded-lg p-4 sm:p-6 text-white">
-      <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Monthly Report for Reported Illness</h3>
+    <div className="bg-gradient-to-br from-[#D2691E] to-[#B85A1A] rounded-xl p-4 sm:p-6 text-white shadow-professional-lg card-hover animate-fade-in-up animate-delay-300">
+      <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 animate-fade-in animate-delay-400">Monthly Report for Reported Illness</h3>
       
-      <div className="bg-white rounded-lg p-2 sm:p-4 mb-3 sm:mb-4 overflow-x-auto">
+      <div className="bg-white rounded-xl p-2 sm:p-4 mb-3 sm:mb-4 overflow-x-auto shadow-inner transition-all duration-300 hover:shadow-lg">
         <div className="w-full" style={{ height: `${chartHeight}px` }}>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -80,7 +80,7 @@ const MonthlyReportCard = ({ onClick }: MonthlyReportCardProps) => {
 
       <button
         onClick={onClick}
-        className="w-full bg-white text-[#D2691E] py-2 sm:py-3 rounded-lg font-semibold text-sm sm:text-base hover:bg-gray-100 transition-colors"
+        className="w-full bg-white text-[#D2691E] py-2.5 sm:py-3 rounded-lg font-semibold text-sm sm:text-base shadow-md transition-all duration-300 hover:bg-gray-50 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0"
       >
         View Monthly Report for Reported Illness
       </button>

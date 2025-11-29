@@ -12,6 +12,7 @@ interface InventoryItem {
   category: string;
   quantity: number;
   expirationDate: Date | string;
+  deliveryDate?: Date | string;
   unit: string;
   createdAt: Date | string;
   updatedAt: Date | string;
@@ -22,12 +23,15 @@ const Inventory = () => {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
+  const [filteredItems, setFilteredItems] = useState<InventoryItem[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [reduceQuantityId, setReduceQuantityId] = useState<string | null>(null);
   const [reduceAmount, setReduceAmount] = useState('');
+  const [expirationNotifications, setExpirationNotifications] = useState<InventoryItem[]>([]);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -35,6 +39,7 @@ const Inventory = () => {
     category: '',
     quantity: '',
     expirationDate: '',
+    deliveryDate: '',
     unit: 'pcs',
   });
 
@@ -59,6 +64,40 @@ const Inventory = () => {
     fetchInventory();
   }, []);
 
+  // Filter items based on search query
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setFilteredItems(inventoryItems);
+    } else {
+      const query = searchQuery.toLowerCase();
+      const filtered = inventoryItems.filter(item =>
+        item.name.toLowerCase().includes(query) ||
+        item.category.toLowerCase().includes(query) ||
+        item.unit.toLowerCase().includes(query)
+      );
+      setFilteredItems(filtered);
+    }
+  }, [searchQuery, inventoryItems]);
+
+  // Check for expiration notifications
+  const checkExpirationNotifications = (items: InventoryItem[]) => {
+    const today = new Date();
+    const oneMonthFromNow = new Date();
+    oneMonthFromNow.setMonth(oneMonthFromNow.getMonth() + 1);
+    
+    const expiringItems = items.filter(item => {
+      if (!item.expirationDate) return false;
+      const expDate = typeof item.expirationDate === 'string' 
+        ? new Date(item.expirationDate) 
+        : item.expirationDate;
+      
+      // Check if expired or expiring within 1 month
+      return expDate <= oneMonthFromNow;
+    });
+    
+    setExpirationNotifications(expiringItems);
+  };
+
   const fetchInventory = async () => {
     try {
       setLoading(true);
@@ -67,6 +106,9 @@ const Inventory = () => {
 
       if (data.success) {
         setInventoryItems(data.data);
+        setFilteredItems(data.data);
+        // Check for expiration notifications
+        checkExpirationNotifications(data.data);
       } else {
         setError(data.message || 'Failed to fetch inventory');
       }
@@ -106,6 +148,7 @@ const Inventory = () => {
           category: '',
           quantity: '',
           expirationDate: '',
+          deliveryDate: '',
           unit: 'pcs',
         });
         fetchInventory();
@@ -232,23 +275,99 @@ const Inventory = () => {
 
           {/* Content */}
           <div className="relative z-10 p-3 sm:p-4 md:p-6">
-            <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6">
+            <div className="bg-white rounded-xl shadow-professional-lg p-4 sm:p-6 animate-fade-in">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Clinic Inventory</h1>
-                <div className="flex gap-2">
-                  <button
-                    onClick={fetchInventory}
-                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm sm:text-base"
-                  >
-                    Refresh
-                  </button>
-                  <button
-                    onClick={() => setShowAddForm(!showAddForm)}
-                    className="px-4 py-2 bg-clinic-green text-white rounded-lg hover:bg-clinic-green-hover transition-colors text-sm sm:text-base"
-                  >
-                    {showAddForm ? 'Cancel' : 'Add Item'}
-                  </button>
+                <div className="animate-fade-in-up" style={{ animationDelay: '0.1s', opacity: 0 }}>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-clinic-green animate-fade-in-up animate-delay-100">Clinic Inventory</h1>
+                  <p className="text-sm text-gray-600 mt-1">
+                    <span className="font-semibold text-clinic-green">LIFO</span> (Last In First Out) - Newest items are used first
+                  </p>
                 </div>
+                <button
+                  onClick={() => setShowAddForm(!showAddForm)}
+                  className="px-6 py-2.5 bg-clinic-green text-white rounded-lg hover:bg-clinic-green-hover hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 text-sm sm:text-base font-semibold shadow-md animate-scale-in animate-delay-200"
+                >
+                  {showAddForm ? 'Cancel' : 'Add Item'}
+                </button>
+              </div>
+
+              {/* Expiration Notifications */}
+              {expirationNotifications.length > 0 && (
+                <div className="mb-6 p-4 bg-gradient-to-r from-yellow-50 to-yellow-100 border-l-4 border-yellow-400 rounded-xl shadow-professional animate-fade-in-up animate-delay-200">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0">
+                      <svg className="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="ml-3 flex-1">
+                      <h3 className="text-sm font-medium text-yellow-800">
+                        Expiration Alert: {expirationNotifications.length} item(s) expiring soon or expired
+                      </h3>
+                      <div className="mt-2 text-sm text-yellow-700">
+                        <ul className="list-disc list-inside space-y-1">
+                          {expirationNotifications.slice(0, 5).map((item) => {
+                            const expDate = typeof item.expirationDate === 'string' 
+                              ? new Date(item.expirationDate) 
+                              : item.expirationDate;
+                            const isExpired = expDate < new Date();
+                            const daysUntilExpiry = Math.ceil((expDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                            
+                            return (
+                              <li key={item.id}>
+                                <span className="font-medium">{item.name}</span> - 
+                                {isExpired ? (
+                                  <span className="text-red-600"> Expired on {formatDate(item.expirationDate)}</span>
+                                ) : (
+                                  <span> Expires in {daysUntilExpiry} day(s) ({formatDate(item.expirationDate)})</span>
+                                )}
+                              </li>
+                            );
+                          })}
+                        </ul>
+                        {expirationNotifications.length > 5 && (
+                          <p className="mt-2 font-medium">...and {expirationNotifications.length - 5} more</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Search Bar */}
+              <div className="mb-6">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search by name, category, or unit..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full px-4 py-2.5 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-clinic-green focus:border-transparent transition-all duration-200 hover:border-clinic-green/50 input-focus animate-fade-in-up animate-delay-300"
+                  />
+                  <svg
+                    className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                    >
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+                {searchQuery && (
+                  <p className="mt-2 text-sm text-gray-600">
+                    Found {filteredItems.length} item(s)
+                  </p>
+                )}
               </div>
 
               {/* Add Item Form */}
@@ -317,7 +436,20 @@ const Inventory = () => {
                         placeholder="e.g., pcs, boxes, bottles"
                       />
                     </div>
-                    <div className="sm:col-span-2">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Delivery Date *
+                      </label>
+                      <input
+                        type="date"
+                        name="deliveryDate"
+                        value={formData.deliveryDate}
+                        onChange={handleInputChange}
+                        required
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-clinic-green focus:border-transparent"
+                      />
+                    </div>
+                    <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Expiration Date *
                       </label>
@@ -366,10 +498,10 @@ const Inventory = () => {
                 <div className="overflow-x-auto">
                   {/* Mobile Card View */}
                   <div className="block sm:hidden space-y-4">
-                    {inventoryItems.map((item) => (
+                    {filteredItems.map((item) => (
                       <div
                         key={item.id}
-                        className="bg-gray-50 rounded-lg p-4 border border-gray-200"
+                        className="bg-gradient-to-br from-white to-gray-50 rounded-xl p-4 border border-gray-200 shadow-professional card-hover animate-fade-in-up"
                       >
                         <div className="flex justify-between items-start mb-3">
                           <div>
@@ -394,6 +526,11 @@ const Inventory = () => {
                           <p>
                             <span className="font-medium">Quantity:</span> {item.quantity} {item.unit}
                           </p>
+                          {item.deliveryDate && (
+                            <p>
+                              <span className="font-medium">Delivery Date:</span> {formatDate(item.deliveryDate)}
+                            </p>
+                          )}
                           <p>
                             <span className="font-medium">Expiration Date:</span>{' '}
                             <span className={isExpired(item.expirationDate) ? 'text-red-600 font-semibold' : ''}>
@@ -469,6 +606,9 @@ const Inventory = () => {
                           Quantity
                         </th>
                         <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                          Delivery Date
+                        </th>
+                        <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
                           Expiration Date
                         </th>
                         <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
@@ -480,8 +620,8 @@ const Inventory = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {inventoryItems.map((item) => (
-                        <tr key={item.id} className="hover:bg-gray-50">
+                      {filteredItems.map((item) => (
+                        <tr key={item.id} className="hover:bg-gray-50 transition-all duration-200 animate-fade-in">
                           <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900 font-medium">
                             {item.name}
                           </td>
@@ -490,6 +630,9 @@ const Inventory = () => {
                           </td>
                           <td className="border border-gray-300 px-4 py-3 text-sm text-gray-700">
                             {item.quantity} {item.unit}
+                          </td>
+                          <td className="border border-gray-300 px-4 py-3 text-sm text-gray-700">
+                            {item.deliveryDate ? formatDate(item.deliveryDate) : 'N/A'}
                           </td>
                           <td className={`border border-gray-300 px-4 py-3 text-sm ${
                             isExpired(item.expirationDate) ? 'text-red-600 font-semibold' : 'text-gray-700'
@@ -569,9 +712,15 @@ const Inventory = () => {
                 </div>
               )}
 
-              {!loading && !error && inventoryItems.length > 0 && (
+              {!loading && !error && filteredItems.length > 0 && (
                 <div className="mt-4 text-sm text-gray-600">
-                  Total Items: <span className="font-semibold">{inventoryItems.length}</span>
+                  Showing {filteredItems.length} of {inventoryItems.length} item(s)
+                </div>
+              )}
+
+              {!loading && !error && filteredItems.length === 0 && inventoryItems.length > 0 && (
+                <div className="text-center py-12">
+                  <p className="text-gray-600 text-lg">No items found matching your search.</p>
                 </div>
               )}
             </div>

@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Hero from '../components/Hero';
+import Footer from '../components/Footer';
 import Modal from '../components/Modal';
 import LoginModal from '../components/LoginModal';
 import RequestFormModal from '../components/RequestFormModal';
 import BlogModal from '../components/BlogModal';
+import AnnouncementsModal from '../components/AnnouncementsModal';
 import OrganizationalChart from '../components/OrganizationalChart';
 import { useAuth } from '../context/AuthContext';
 
@@ -14,6 +16,7 @@ const LandingPage = () => {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isRequestFormModalOpen, setIsRequestFormModalOpen] = useState(false);
   const [isBlogModalOpen, setIsBlogModalOpen] = useState(false);
+  const [isAnnouncementsModalOpen, setIsAnnouncementsModalOpen] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -23,8 +26,7 @@ const LandingPage = () => {
   };
 
   const handleCtaClick = () => {
-    // TODO: Implement navigation to next section or page
-    console.log('View More clicked');
+    navigate('/announcements');
   };
 
   const handleAboutUsClick = () => {
@@ -43,6 +45,10 @@ const LandingPage = () => {
     setIsBlogModalOpen(true);
   };
 
+  const handleAnnouncementsClick = () => {
+    setIsAnnouncementsModalOpen(true);
+  };
+
   const handleCloseModal = () => {
     setIsAboutUsModalOpen(false);
   };
@@ -59,24 +65,31 @@ const LandingPage = () => {
     setIsBlogModalOpen(false);
   };
 
+  const handleCloseAnnouncementsModal = () => {
+    setIsAnnouncementsModalOpen(false);
+  };
+
   const handleLoginSuccess = (userData: any) => {
     login(userData);
     navigate('/admin/home');
   };
 
   return (
-    <div className="w-full min-h-screen">
+    <div className="w-full min-h-screen flex flex-col">
       <Header 
         onSearchClick={handleSearchClick}
         onAboutUsClick={handleAboutUsClick}
         onLoginClick={handleLoginClick}
         onRequestFormClick={handleRequestFormClick}
         onBlogClick={handleBlogClick}
+        onAnnouncementsClick={handleAnnouncementsClick}
       />
       <Hero 
         title="Clinic Access and Record Enhancements System"
         onCtaClick={handleCtaClick}
       />
+      
+      <Footer />
       
       <Modal
         isOpen={isAboutUsModalOpen}
@@ -100,6 +113,11 @@ const LandingPage = () => {
       <BlogModal
         isOpen={isBlogModalOpen}
         onClose={handleCloseBlogModal}
+      />
+
+      <AnnouncementsModal
+        isOpen={isAnnouncementsModalOpen}
+        onClose={handleCloseAnnouncementsModal}
       />
     </div>
   );

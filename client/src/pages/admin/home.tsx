@@ -60,7 +60,7 @@ const AdminHome = () => {
           <div className="absolute inset-0 bg-white/50 backdrop-blur-sm" />
 
           {/* Content */}
-          <div className="relative z-10 p-3 sm:p-4 md:p-6">
+          <div className="relative z-10 p-3 sm:p-4 md:p-6 animate-fade-in">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
               {/* Welcome Card */}
               <WelcomeCard 

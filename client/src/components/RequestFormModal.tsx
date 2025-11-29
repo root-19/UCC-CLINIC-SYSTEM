@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Modal from './Modal';
 import bgClinic from '../assets/images/bg-clinic.png';
 import { env } from '../config/env';
@@ -13,25 +13,68 @@ const RequestFormModal = ({ isOpen, onClose }: RequestFormModalProps) => {
     fullname: '',
     yearSection: '',
     schoolIdNumber: '',
-    departmentCourse: '',
+    department: '',
     assessment: '',
-    referredTo: '',
+    email: '',
+    requestDate: '',
+    requestTime: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Department list
+  const departments = [
+    'College of Business Administration',
+    'College of Education',
+    'College of Engineering',
+    'College of Arts and Sciences',
+    'College of Computer Studies',
+    'College of Nursing',
+    'College of Criminology',
+    'College of Accountancy',
+    'College of Architecture',
+    'College of Tourism and Hospitality Management',
+    'College of Social Work',
+    'College of Law',
+    'Graduate School',
+    'Other',
+  ];
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
   };
 
+  // Set default date and time to current date/time
+  useEffect(() => {
+    if (isOpen) {
+      const now = new Date();
+      const dateStr = now.toISOString().split('T')[0]; // YYYY-MM-DD
+      const timeStr = now.toTimeString().slice(0, 5); // HH:MM
+      
+      setFormData(prev => ({
+        ...prev,
+        requestDate: prev.requestDate || dateStr,
+        requestTime: prev.requestTime || timeStr,
+      }));
+    }
+  }, [isOpen]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
+
+    // Validate Student ID Number format
+    const studentIdPattern = /^[0-9]{8}-[A-Z]$/;
+    if (!studentIdPattern.test(formData.schoolIdNumber)) {
+      setError('Student ID Number must be in format: 8 digits, dash, 1 letter (e.g., 12345678-A)');
+      setLoading(false);
+      return;
+    }
 
     try {
       const response = await fetch(`${env.API_URL}/api/requests`, {
@@ -47,13 +90,18 @@ const RequestFormModal = ({ isOpen, onClose }: RequestFormModalProps) => {
       if (data.success) {
         setSuccess(true);
         // Reset form
+        const now = new Date();
+        const dateStr = now.toISOString().split('T')[0];
+        const timeStr = now.toTimeString().slice(0, 5);
         setFormData({
           fullname: '',
           yearSection: '',
           schoolIdNumber: '',
-          departmentCourse: '',
+          department: '',
           assessment: '',
-          referredTo: '',
+          email: '',
+          requestDate: dateStr,
+          requestTime: timeStr,
         });
         // Close modal after 2 seconds
         setTimeout(() => {
@@ -81,12 +129,12 @@ const RequestFormModal = ({ isOpen, onClose }: RequestFormModalProps) => {
         />
         
         {/* Form Container */}
-        <div className="relative bg-white/90 backdrop-blur-md rounded-lg p-6 sm:p-8 shadow-2xl">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2 text-center">
+        <div className="relative bg-white/95 backdrop-blur-md rounded-xl p-6 sm:p-8 shadow-professional-lg animate-fade-in">
+          <h2 className="text-3xl font-bold text-clinic-green mb-2 text-center animate-fade-in-up animate-delay-100">
             Request Form
           </h2>
           
-          <p className="text-gray-700 text-center mb-6 text-sm sm:text-base">
+          <p className="text-gray-600 text-center mb-6 text-sm sm:text-base animate-fade-in-up animate-delay-200">
             Submit your request forms conveniently. Kindly fill out all the necessary information.
           </p>
 
@@ -115,15 +163,15 @@ const RequestFormModal = ({ isOpen, onClose }: RequestFormModalProps) => {
                 value={formData.fullname}
                 onChange={handleChange}
                 required
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-clinic-green"
+                className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-clinic-green transition-all duration-200 hover:border-clinic-green/50 input-focus"
                 placeholder="Enter your full name"
               />
             </div>
 
-            {/* Year & Section */}
+            {/* Course/Year & Section */}
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
               <label htmlFor="yearSection" className="text-gray-700 font-medium sm:w-40 flex-shrink-0">
-                Year & Section:
+                Course/Year & Section:
               </label>
               <input
                 type="text"
@@ -132,43 +180,67 @@ const RequestFormModal = ({ isOpen, onClose }: RequestFormModalProps) => {
                 value={formData.yearSection}
                 onChange={handleChange}
                 required
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-clinic-green"
-                placeholder="e.g., 3rd Year - Section A"
+                className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-clinic-green transition-all duration-200 hover:border-clinic-green/50 input-focus"
+                placeholder="e.g., BSIT - 3rd Year - Section A"
               />
             </div>
 
-            {/* School ID Number */}
+            {/* Student ID Number */}
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
               <label htmlFor="schoolIdNumber" className="text-gray-700 font-medium sm:w-40 flex-shrink-0">
-                School ID Number:
+                Student ID Number:
               </label>
               <input
                 type="text"
                 id="schoolIdNumber"
                 name="schoolIdNumber"
                 value={formData.schoolIdNumber}
-                onChange={handleChange}
+                onChange={(e) => {
+                  // Format: 8 digits, dash, 1 letter
+                  let value = e.target.value.toUpperCase();
+                  // Remove any non-alphanumeric except dash
+                  value = value.replace(/[^0-9A-Z-]/g, '');
+                  // Limit to 10 characters (8 digits + dash + 1 letter)
+                  if (value.length <= 10) {
+                    setFormData({
+                      ...formData,
+                      schoolIdNumber: value,
+                    });
+                  }
+                }}
                 required
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-clinic-green"
-                placeholder="Enter your school ID number"
+                pattern="[0-9]{8}-[A-Z]"
+                className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-clinic-green transition-all duration-200 hover:border-clinic-green/50 input-focus"
+                placeholder="12345678-A"
+                title="Format: 8 digits, dash, and 1 letter (e.g., 12345678-A)"
               />
+              {formData.schoolIdNumber && !/^[0-9]{8}-[A-Z]$/.test(formData.schoolIdNumber) && (
+                <p className="text-red-600 text-xs mt-1 sm:mt-0 sm:ml-2">
+                  Format: 8 digits, dash, 1 letter (e.g., 12345678-A)
+                </p>
+              )}
             </div>
 
-            {/* Department/Course */}
+            {/* Department */}
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-              <label htmlFor="departmentCourse" className="text-gray-700 font-medium sm:w-40 flex-shrink-0">
-                Department/Course:
+              <label htmlFor="department" className="text-gray-700 font-medium sm:w-40 flex-shrink-0">
+                Department:
               </label>
-              <input
-                type="text"
-                id="departmentCourse"
-                name="departmentCourse"
-                value={formData.departmentCourse}
+              <select
+                id="department"
+                name="department"
+                value={formData.department}
                 onChange={handleChange}
                 required
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-clinic-green"
-                placeholder="Enter your department or course"
-              />
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-clinic-green bg-white"
+              >
+                <option value="">Select Department</option>
+                {departments.map((dept) => (
+                  <option key={dept} value={dept}>
+                    {dept}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Assessment */}
@@ -183,25 +255,57 @@ const RequestFormModal = ({ isOpen, onClose }: RequestFormModalProps) => {
                 value={formData.assessment}
                 onChange={handleChange}
                 required
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-clinic-green"
+                className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-clinic-green transition-all duration-200 hover:border-clinic-green/50 input-focus"
                 placeholder="Enter assessment type"
               />
             </div>
 
-            {/* Referred to */}
+            {/* Email Address */}
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-              <label htmlFor="referredTo" className="text-gray-700 font-medium sm:w-40 flex-shrink-0">
-                Referred to:
+              <label htmlFor="email" className="text-gray-700 font-medium sm:w-40 flex-shrink-0">
+                Email Address:
               </label>
               <input
-                type="text"
-                id="referredTo"
-                name="referredTo"
-                value={formData.referredTo}
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
                 onChange={handleChange}
                 required
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-clinic-green"
-                placeholder="Enter referral information"
+                className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-clinic-green transition-all duration-200 hover:border-clinic-green/50 input-focus"
+                placeholder="your.email@example.com"
+              />
+            </div>
+
+            {/* Request Date */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+              <label htmlFor="requestDate" className="text-gray-700 font-medium sm:w-40 flex-shrink-0">
+                Request Date:
+              </label>
+              <input
+                type="date"
+                id="requestDate"
+                name="requestDate"
+                value={formData.requestDate}
+                onChange={handleChange}
+                required
+                className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-clinic-green transition-all duration-200 hover:border-clinic-green/50 input-focus"
+              />
+            </div>
+
+            {/* Request Time */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+              <label htmlFor="requestTime" className="text-gray-700 font-medium sm:w-40 flex-shrink-0">
+                Request Time:
+              </label>
+              <input
+                type="time"
+                id="requestTime"
+                name="requestTime"
+                value={formData.requestTime}
+                onChange={handleChange}
+                required
+                className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-clinic-green transition-all duration-200 hover:border-clinic-green/50 input-focus"
               />
             </div>
 
@@ -218,7 +322,7 @@ const RequestFormModal = ({ isOpen, onClose }: RequestFormModalProps) => {
               <button
                 type="submit"
                 disabled={loading}
-                className="px-6 py-2 bg-clinic-green text-white rounded-lg font-medium hover:bg-clinic-green-hover transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                className="px-8 py-3 bg-clinic-green text-white rounded-lg font-semibold shadow-md hover:bg-clinic-green-hover hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:translate-y-0"
               >
                 {loading ? 'Submitting...' : 'Submit'}
               </button>

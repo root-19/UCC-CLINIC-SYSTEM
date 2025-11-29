@@ -24,6 +24,10 @@ const RegistrationStudent = () => {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [registrations, setRegistrations] = useState<RegistrationForm[]>([]);
+  const [filteredRegistrations, setFilteredRegistrations] = useState<RegistrationForm[]>([]);
+  const [activeTab, setActiveTab] = useState<'all' | 'active' | 'inactive'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedDepartment, setSelectedDepartment] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
@@ -50,6 +54,41 @@ const RegistrationStudent = () => {
     fetchRegistrations();
   }, []);
 
+  // Get unique departments
+  const departments = Array.from(new Set(registrations.map(r => r.departmentCourse).filter(Boolean))).sort();
+
+  // Filter registrations based on search, department, and status
+  useEffect(() => {
+    let filtered = [...registrations];
+
+    // Filter by status tab
+    if (activeTab === 'active') {
+      filtered = filtered.filter(r => r.status === 'active');
+    } else if (activeTab === 'inactive') {
+      filtered = filtered.filter(r => r.status === 'inactive');
+    }
+
+    // Filter by department
+    if (selectedDepartment) {
+      filtered = filtered.filter(r => r.departmentCourse === selectedDepartment);
+    }
+
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(r =>
+        r.fullname.toLowerCase().includes(query) ||
+        r.schoolIdNumber.toLowerCase().includes(query) ||
+        r.yearSection.toLowerCase().includes(query) ||
+        r.departmentCourse.toLowerCase().includes(query) ||
+        r.formToRequest.toLowerCase().includes(query) ||
+        r.purpose.toLowerCase().includes(query)
+      );
+    }
+
+    setFilteredRegistrations(filtered);
+  }, [registrations, activeTab, selectedDepartment, searchQuery]);
+
   const fetchRegistrations = async () => {
     try {
       setLoading(true);
@@ -58,6 +97,7 @@ const RegistrationStudent = () => {
 
       if (data.success) {
         setRegistrations(data.data);
+        setFilteredRegistrations(data.data);
       } else {
         setError(data.message || 'Failed to fetch registrations');
       }
@@ -110,6 +150,37 @@ const RegistrationStudent = () => {
     }
   };
 
+  const handleUpdateStatus = async (registrationId: string, newStatus: 'active' | 'inactive') => {
+    try {
+      setUpdatingId(registrationId);
+      const response = await fetch(`${env.API_URL}/api/registrations/${registrationId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Update the registration in the local state
+        setRegistrations(registrations.map(reg =>
+          reg.id === registrationId
+            ? { ...reg, status: newStatus, updatedAt: new Date() }
+            : reg
+        ));
+      } else {
+        alert(data.message || 'Failed to update status');
+      }
+    } catch (err) {
+      console.error('Error updating status:', err);
+      alert('Network error. Please try again.');
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
   const handleDelete = async (registrationId: string) => {
     if (!confirm('Are you sure you want to delete this registration?')) {
       return;
@@ -131,6 +202,21 @@ const RegistrationStudent = () => {
       console.error('Error deleting registration:', err);
       alert('Network error. Please try again.');
     }
+  };
+
+  const getStatusBadge = (status: string) => {
+    const isActive = status === 'active';
+    return (
+      <span
+        className={`px-3 py-1 rounded-full text-xs font-semibold ${
+          isActive
+            ? 'bg-green-100 text-green-800'
+            : 'bg-gray-100 text-gray-800'
+        }`}
+      >
+        {isActive ? 'Active' : 'Inactive'}
+      </span>
+    );
   };
 
   const formatDate = (timestamp: any) => {
@@ -178,24 +264,106 @@ const RegistrationStudent = () => {
 
           {/* Content */}
           <div className="relative z-10 p-3 sm:p-4 md:p-6">
-            <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6">
+            <div className="bg-white rounded-xl shadow-professional-lg p-4 sm:p-6 animate-fade-in">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Student Registration</h1>
-                <div className="flex gap-2">
+                <h1 className="text-2xl sm:text-3xl font-bold text-clinic-green animate-fade-in-up animate-delay-100">Student Records</h1>
+                <button
+                  onClick={() => setShowAddForm(!showAddForm)}
+                  className="px-6 py-2.5 bg-clinic-green text-white rounded-lg hover:bg-clinic-green-hover hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 text-sm sm:text-base font-semibold shadow-md animate-scale-in animate-delay-200"
+                >
+                  {showAddForm ? 'Cancel' : 'Add Student'}
+                </button>
+              </div>
+
+              {/* Status Tabs */}
+              <div className="mb-6 border-b border-gray-200 animate-fade-in-up animate-delay-200">
+                <nav className="flex space-x-4" aria-label="Tabs">
                   <button
-                    onClick={fetchRegistrations}
-                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm sm:text-base"
+                    onClick={() => setActiveTab('all')}
+                    className={`py-2.5 px-4 border-b-2 font-semibold text-sm transition-all duration-300 ${
+                      activeTab === 'all'
+                        ? 'border-clinic-green text-clinic-green scale-105'
+                        : 'border-transparent text-gray-500 hover:text-clinic-green hover:border-clinic-green/50'
+                    }`}
                   >
-                    Refresh
+                    All Students ({registrations.length})
                   </button>
                   <button
-                    onClick={() => setShowAddForm(!showAddForm)}
-                    className="px-4 py-2 bg-clinic-green text-white rounded-lg hover:bg-clinic-green-hover transition-colors text-sm sm:text-base"
+                    onClick={() => setActiveTab('active')}
+                    className={`py-2.5 px-4 border-b-2 font-semibold text-sm transition-all duration-300 ${
+                      activeTab === 'active'
+                        ? 'border-clinic-green text-clinic-green scale-105'
+                        : 'border-transparent text-gray-500 hover:text-clinic-green hover:border-clinic-green/50'
+                    }`}
                   >
-                    {showAddForm ? 'Cancel' : 'Add Registration'}
+                    Active ({registrations.filter(r => r.status === 'active').length})
                   </button>
+                  <button
+                    onClick={() => setActiveTab('inactive')}
+                    className={`py-2.5 px-4 border-b-2 font-semibold text-sm transition-all duration-300 ${
+                      activeTab === 'inactive'
+                        ? 'border-clinic-green text-clinic-green scale-105'
+                        : 'border-transparent text-gray-500 hover:text-clinic-green hover:border-clinic-green/50'
+                    }`}
+                  >
+                    Inactive ({registrations.filter(r => r.status === 'inactive').length})
+                  </button>
+                </nav>
+              </div>
+
+              {/* Search and Filter Bar */}
+              <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Search Bar */}
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search by name, ID, department, form, or purpose..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full px-4 py-2.5 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-clinic-green focus:border-transparent transition-all duration-200 hover:border-clinic-green/50 input-focus animate-fade-in-up animate-delay-300"
+                  />
+                  <svg
+                    className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                    >
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+
+                {/* Department Filter */}
+                <div>
+                  <select
+                    value={selectedDepartment}
+                    onChange={(e) => setSelectedDepartment(e.target.value)}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-clinic-green focus:border-transparent bg-white transition-all duration-200 hover:border-clinic-green/50 input-focus animate-fade-in-up animate-delay-400"
+                  >
+                    <option value="">All Departments</option>
+                    {departments.map((dept) => (
+                      <option key={dept} value={dept}>
+                        {dept}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
+
+              {searchQuery || selectedDepartment ? (
+                <div className="mb-4 text-sm text-gray-600">
+                  Showing {filteredRegistrations.length} of {registrations.length} student(s)
+                </div>
+              ) : null}
 
               {/* Add Registration Form */}
               {showAddForm && (
@@ -311,27 +479,31 @@ const RegistrationStudent = () => {
                 </div>
               )}
 
-              {!loading && !error && registrations.length === 0 && (
+              {!loading && !error && filteredRegistrations.length === 0 && registrations.length === 0 && (
                 <div className="text-center py-12">
-                  <p className="text-gray-600 text-lg">No student registrations found.</p>
-                  <p className="text-gray-500 text-sm mt-2">Click "Add Registration" to start adding students.</p>
+                  <p className="text-gray-600 text-lg">No student records found.</p>
+                  <p className="text-gray-500 text-sm mt-2">Click "Add Student" to start adding students.</p>
                 </div>
               )}
 
-              {!loading && !error && registrations.length > 0 && (
+              {!loading && !error && filteredRegistrations.length === 0 && registrations.length > 0 && (
+                <div className="text-center py-12">
+                  <p className="text-gray-600 text-lg">No students found matching your filters.</p>
+                </div>
+              )}
+
+              {!loading && !error && filteredRegistrations.length > 0 && (
                 <div className="overflow-x-auto">
                   {/* Mobile Card View */}
                   <div className="block sm:hidden space-y-4">
-                    {registrations.map((registration) => (
+                    {filteredRegistrations.map((registration) => (
                       <div
                         key={registration.id}
-                        className="bg-gray-50 rounded-lg p-4 border border-gray-200"
+                        className="bg-gradient-to-br from-white to-gray-50 rounded-xl p-4 border border-gray-200 shadow-professional card-hover animate-fade-in-up"
                       >
                         <div className="flex justify-between items-start mb-3">
                           <h3 className="font-semibold text-gray-900">{registration.fullname}</h3>
-                          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
-                            {registration.status || 'Active'}
-                          </span>
+                          {getStatusBadge(registration.status || 'active')}
                         </div>
                         <div className="space-y-2 text-sm">
                           <p>
@@ -354,13 +526,24 @@ const RegistrationStudent = () => {
                           </p>
                         </div>
                         {/* Action Buttons */}
-                        <div className="mt-4">
-                          <button
-                            onClick={() => handleDelete(registration.id)}
-                            className="w-full px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
-                          >
-                            Delete
-                          </button>
+                        <div className="mt-4 flex gap-2">
+                          {registration.status === 'active' ? (
+                            <button
+                              onClick={() => handleUpdateStatus(registration.id, 'inactive')}
+                              disabled={updatingId === registration.id}
+                              className="flex-1 px-3 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-sm font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
+                            >
+                              {updatingId === registration.id ? 'Updating...' : 'Set Inactive'}
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleUpdateStatus(registration.id, 'active')}
+                              disabled={updatingId === registration.id}
+                              className="flex-1 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
+                            >
+                              {updatingId === registration.id ? 'Updating...' : 'Set Active'}
+                            </button>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -397,8 +580,8 @@ const RegistrationStudent = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {registrations.map((registration) => (
-                        <tr key={registration.id} className="hover:bg-gray-50">
+                      {filteredRegistrations.map((registration) => (
+                        <tr key={registration.id} className="hover:bg-gray-50 transition-all duration-200 animate-fade-in">
                           <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900 font-medium">
                             {registration.fullname}
                           </td>
@@ -418,18 +601,30 @@ const RegistrationStudent = () => {
                             {registration.purpose}
                           </td>
                           <td className="border border-gray-300 px-4 py-3">
-                            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
-                              {registration.status || 'Active'}
-                            </span>
+                            {getStatusBadge(registration.status || 'active')}
                           </td>
                           <td className="border border-gray-300 px-4 py-3">
-                            <button
-                              onClick={() => handleDelete(registration.id)}
-                              className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-xs font-medium"
-                              title="Delete Registration"
-                            >
-                              Delete
-                            </button>
+                            <div className="flex gap-2">
+                              {registration.status === 'active' ? (
+                                <button
+                                  onClick={() => handleUpdateStatus(registration.id, 'inactive')}
+                                  disabled={updatingId === registration.id}
+                                  className="px-3 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-700 transition-colors text-xs font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                  title="Set Inactive"
+                                >
+                                  {updatingId === registration.id ? '...' : 'Inactive'}
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => handleUpdateStatus(registration.id, 'active')}
+                                  disabled={updatingId === registration.id}
+                                  className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-xs font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                  title="Set Active"
+                                >
+                                  {updatingId === registration.id ? '...' : 'Active'}
+                                </button>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -438,9 +633,9 @@ const RegistrationStudent = () => {
                 </div>
               )}
 
-              {!loading && !error && registrations.length > 0 && (
+              {!loading && !error && filteredRegistrations.length > 0 && (
                 <div className="mt-4 text-sm text-gray-600">
-                  Total Registrations: <span className="font-semibold">{registrations.length}</span>
+                  Showing {filteredRegistrations.length} of {registrations.length} student(s)
                 </div>
               )}
             </div>

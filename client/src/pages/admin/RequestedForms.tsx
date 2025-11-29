@@ -11,9 +11,10 @@ interface RequestForm {
   fullname: string;
   yearSection: string;
   schoolIdNumber: string;
-  departmentCourse: string;
+  department: string;
   assessment: string;
-  referredTo: string;
+  email: string;
+  requestDate?: any;
   status: string;
   createdAt: any;
   updatedAt: any;
@@ -27,6 +28,7 @@ const RequestedForms = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     // Redirect to home if not authenticated
@@ -67,6 +69,7 @@ const RequestedForms = () => {
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
+      hour12: true,
     });
   };
 
@@ -90,6 +93,7 @@ const RequestedForms = () => {
             ? { ...req, status: newStatus, updatedAt: new Date() }
             : req
         ));
+        alert(`Status updated to ${newStatus}. Email notification sent to student.`);
       } else {
         alert(data.message || 'Failed to update status');
       }
@@ -98,6 +102,34 @@ const RequestedForms = () => {
       alert('Network error. Please try again.');
     } finally {
       setUpdatingId(null);
+    }
+  };
+
+  const handleDelete = async (requestId: string) => {
+    if (!confirm('Are you sure you want to delete this request? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      setDeletingId(requestId);
+      const response = await fetch(`${env.API_URL}/api/requests/${requestId}`, {
+        method: 'DELETE',
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Remove the request from the local state
+        setRequests(requests.filter(req => req.id !== requestId));
+        alert('Request deleted successfully.');
+      } else {
+        alert(data.message || 'Failed to delete request');
+      }
+    } catch (err) {
+      console.error('Error deleting request:', err);
+      alert('Network error. Please try again.');
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -153,15 +185,9 @@ const RequestedForms = () => {
 
           {/* Content */}
           <div className="relative z-10 p-3 sm:p-4 md:p-6">
-            <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6">
+            <div className="bg-white rounded-xl shadow-professional-lg p-4 sm:p-6 animate-fade-in">
               <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Requested Forms</h1>
-                <button
-                  onClick={fetchRequests}
-                  className="px-4 py-2 bg-clinic-green text-white rounded-lg hover:bg-clinic-green-hover transition-colors text-sm sm:text-base"
-                >
-                  Refresh
-                </button>
+                <h1 className="text-2xl sm:text-3xl font-bold text-clinic-green animate-fade-in-up animate-delay-100">Requested Forms</h1>
               </div>
 
               {loading && (
@@ -190,7 +216,7 @@ const RequestedForms = () => {
                     {requests.map((request) => (
                       <div
                         key={request.id}
-                        className="bg-gray-50 rounded-lg p-4 border border-gray-200"
+                        className="bg-gradient-to-br from-white to-gray-50 rounded-xl p-4 border border-gray-200 shadow-professional card-hover animate-fade-in-up"
                       >
                         <div className="flex justify-between items-start mb-3">
                           <h3 className="font-semibold text-gray-900">{request.fullname}</h3>
@@ -204,14 +230,19 @@ const RequestedForms = () => {
                             <span className="font-medium">School ID:</span> {request.schoolIdNumber}
                           </p>
                           <p>
-                            <span className="font-medium">Department/Course:</span> {request.departmentCourse}
+                            <span className="font-medium">Department:</span> {request.department}
                           </p>
                           <p>
                             <span className="font-medium">Assessment:</span> {request.assessment}
                           </p>
                           <p>
-                            <span className="font-medium">Referred to:</span> {request.referredTo}
+                            <span className="font-medium">Email:</span> {request.email}
                           </p>
+                          {request.requestDate && (
+                            <p>
+                              <span className="font-medium">Request Date & Time:</span> {formatDate(request.requestDate)}
+                            </p>
+                          )}
                           <p className="text-xs text-gray-500 mt-3">
                             Submitted: {formatDate(request.createdAt)}
                           </p>
@@ -223,14 +254,14 @@ const RequestedForms = () => {
                               <button
                                 onClick={() => handleUpdateStatus(request.id, 'approved')}
                                 disabled={updatingId === request.id}
-                                className="flex-1 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                className="flex-1 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 text-sm font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
                               >
                                 {updatingId === request.id ? 'Updating...' : 'Approve'}
                               </button>
                               <button
                                 onClick={() => handleUpdateStatus(request.id, 'rejected')}
                                 disabled={updatingId === request.id}
-                                className="flex-1 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                className="flex-1 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 text-sm font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
                               >
                                 {updatingId === request.id ? 'Updating...' : 'Reject'}
                               </button>
@@ -240,11 +271,18 @@ const RequestedForms = () => {
                             <button
                               onClick={() => handleUpdateStatus(request.id, 'pending')}
                               disabled={updatingId === request.id}
-                              className="flex-1 px-3 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-sm font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                className="flex-1 px-3 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 text-sm font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
                             >
                               {updatingId === request.id ? 'Updating...' : 'Reset to Pending'}
                             </button>
                           )}
+                          <button
+                            onClick={() => handleDelete(request.id)}
+                            disabled={deletingId === request.id}
+                            className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 text-sm font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
+                          >
+                            {deletingId === request.id ? 'Deleting...' : 'Delete'}
+                          </button>
                         </div>
                       </div>
                     ))}
@@ -264,20 +302,20 @@ const RequestedForms = () => {
                           School ID
                         </th>
                         <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                          Department/Course
+                          Department
                         </th>
                         <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
                           Assessment
                         </th>
                         <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                          Referred to
+                          Email
+                        </th>
+                        <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                          Request Date & Time
                         </th>
                         <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
                           Status
                         </th>
-                        {/* <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                          Date Submitted
-                        </th> */}
                         <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
                           Actions
                         </th>
@@ -285,7 +323,7 @@ const RequestedForms = () => {
                     </thead>
                     <tbody>
                       {requests.map((request) => (
-                        <tr key={request.id} className="hover:bg-gray-50">
+                        <tr key={request.id} className="hover:bg-gray-50 transition-all duration-200 animate-fade-in">
                           <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
                             {request.fullname}
                           </td>
@@ -296,20 +334,20 @@ const RequestedForms = () => {
                             {request.schoolIdNumber}
                           </td>
                           <td className="border border-gray-300 px-4 py-3 text-sm text-gray-700">
-                            {request.departmentCourse}
+                            {request.department}
                           </td>
                           <td className="border border-gray-300 px-4 py-3 text-sm text-gray-700">
                             {request.assessment}
                           </td>
                           <td className="border border-gray-300 px-4 py-3 text-sm text-gray-700">
-                            {request.referredTo}
+                            {request.email}
+                          </td>
+                          <td className="border border-gray-300 px-4 py-3 text-sm text-gray-700">
+                            {request.requestDate ? formatDate(request.requestDate) : 'N/A'}
                           </td>
                           <td className="border border-gray-300 px-4 py-3">
                             {getStatusBadge(request.status)}
                           </td>
-                          {/* <td className="border border-gray-300 px-4 py-3 text-sm text-gray-700">
-                            {formatDate(request.createdAt)}
-                          </td> */}
                           <td className="border border-gray-300 px-4 py-3">
                             <div className="flex gap-2">
                               {request.status === 'pending' && (
@@ -342,6 +380,14 @@ const RequestedForms = () => {
                                   {updatingId === request.id ? '...' : 'Reset'}
                                 </button>
                               )}
+                              <button
+                                onClick={() => handleDelete(request.id)}
+                                disabled={deletingId === request.id}
+                                className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-xs font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                title="Delete Request"
+                              >
+                                {deletingId === request.id ? '...' : 'Delete'}
+                              </button>
                             </div>
                           </td>
                         </tr>

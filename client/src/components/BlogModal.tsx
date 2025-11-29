@@ -68,20 +68,21 @@ const BlogModal = ({ isOpen, onClose }: BlogModalProps) => {
         </div>
 
         <div className="space-y-6">
-          {articles.map((article) => (
+          {articles.map((article, index) => (
             <article
               key={article.id}
-              className="border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow bg-white"
+              className="border border-gray-200 rounded-xl p-5 hover:shadow-professional-lg transition-all duration-300 bg-gradient-to-br from-white to-gray-50 card-hover animate-fade-in-up"
+              style={{ animationDelay: `${index * 0.1}s`, opacity: 0 }}
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <span className="px-3 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full">
+                    <span className="px-3 py-1 bg-clinic-green/10 text-clinic-green text-xs font-semibold rounded-full border border-clinic-green/20">
                       {article.category}
                     </span>
                     <span className="text-xs text-gray-500">{article.date}</span>
                   </div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">{article.title}</h3>
+                  <h3 className="text-lg font-bold text-clinic-green mb-2 transition-colors duration-300 hover:text-clinic-green-hover">{article.title}</h3>
                   <p className="text-sm text-gray-600 mb-3 leading-relaxed">{article.content}</p>
                   <p className="text-xs text-gray-500 italic">By {article.author}</p>
                 </div>

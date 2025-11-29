@@ -13,6 +13,7 @@ export interface HeaderProps {
   onLoginClick?: () => void;
   onRequestFormClick?: () => void;
   onBlogClick?: () => void;
+  onAnnouncementsClick?: () => void;
 }
 
 export interface HeroProps {
