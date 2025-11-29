@@ -15,7 +15,8 @@ const Header = ({
   onAboutUsClick,
   onLoginClick,
   onRequestFormClick,
-  onAnnouncementsClick
+  onAnnouncementsClick,
+  onBlogClick: _onBlogClick // Unused but kept for type compatibility
 }: HeaderProps) => {
   const handleLinkClick = (label: string, e: React.MouseEvent) => {
     if (label === 'About Us' && onAboutUsClick) {

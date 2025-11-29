@@ -181,11 +181,6 @@ const RegistrationStudent = () => {
     }
   };
 
-  // Reserved for future use - delete functionality
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const _handleDelete = async (_registrationId: string) => {
-    // Function reserved for future use
-  };
 
   const getStatusBadge = (status: string) => {
     const isActive = status === 'active';

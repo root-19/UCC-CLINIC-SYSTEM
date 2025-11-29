@@ -45,7 +45,7 @@ const OrganizationalChart = ({ className = '' }: OrgChartProps) => {
 
       {/* Top Level - Officer in Charge */}
       <div className="flex flex-col items-center mb-8">
-        <OrgBox person={OfficerInCharge} level={1} />
+        <OrgBox person={OfficerInCharge} />
       </div>
 
       {/* Connector Line */}
@@ -55,7 +55,7 @@ const OrganizationalChart = ({ className = '' }: OrgChartProps) => {
 
       {/* Second Level - Director */}
       <div className="flex flex-col items-center mb-8">
-        <OrgBox person={Director} level={2} />
+        <OrgBox person={Director} />
       </div>
 
       {/* Connector Lines */}
@@ -66,24 +66,24 @@ const OrganizationalChart = ({ className = '' }: OrgChartProps) => {
       {/* Third Level - Physician and Dentist */}
       <div className="flex flex-col md:flex-row justify-center gap-8 mb-8">
         <div className="flex flex-col items-center">
-          <OrgBox person={Physician} level={3} />
+          <OrgBox person={Physician} />
           {/* Connector Line */}
           <div className="w-0.5 h-8 bg-gray-400 my-4"></div>
           {/* Fourth Level - Nurses under Physician */}
           <div className="flex flex-col gap-4">
-            <OrgBox person={Nurses[0]} level={4} />
-            <OrgBox person={Nurses[1]} level={4} />
+            <OrgBox person={Nurses[0]} />
+            <OrgBox person={Nurses[1]} />
           </div>
         </div>
 
         <div className="flex flex-col items-center">
-          <OrgBox person={Dentist} level={3} />
+          <OrgBox person={Dentist} />
           {/* Connector Line */}
           <div className="w-0.5 h-8 bg-gray-400 my-4"></div>
           {/* Fourth Level - Nurses under Dentist */}
           <div className="flex flex-col gap-4">
-            <OrgBox person={Nurses[2]} level={4} />
-            <OrgBox person={Nurses[3]} level={4} />
+            <OrgBox person={Nurses[2]} />
+            <OrgBox person={Nurses[3]} />
           </div>
         </div>
       </div>
@@ -93,7 +93,6 @@ const OrganizationalChart = ({ className = '' }: OrgChartProps) => {
 
 interface OrgBoxProps {
   person: Person;
-  level: number;
 }
 
 const OrgBox = ({ person }: OrgBoxProps) => {
