@@ -4,13 +4,13 @@ import { db } from '../config/db.js';
 // Create inventory item
 export const createInventoryItem = async (req: express.Request, res: express.Response) => {
   try {
-    const { name, category, quantity, expirationDate, unit } = req.body;
+    const { name, category, quantity, expirationDate, deliveryDate, unit } = req.body;
 
     // Validate required fields
-    if (!name || !category || !quantity || !expirationDate) {
+    if (!name || !category || !quantity || !expirationDate || !deliveryDate) {
       return res.status(400).json({ 
         success: false, 
-        message: 'Name, category, quantity, and expiration date are required' 
+        message: 'Name, category, quantity, delivery date, and expiration date are required' 
       });
     }
 
@@ -32,12 +32,22 @@ export const createInventoryItem = async (req: express.Request, res: express.Res
       });
     }
 
+    // Validate delivery date
+    const delDate = new Date(deliveryDate);
+    if (isNaN(delDate.getTime())) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid delivery date' 
+      });
+    }
+
     // Create inventory item document
     const inventoryData = {
       name,
       category,
       quantity: qty,
       expirationDate: expDate,
+      deliveryDate: delDate,
       unit: unit || 'pcs',
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -72,6 +82,7 @@ export const getInventoryItems = async (req: express.Request, res: express.Respo
         id: doc.id,
         ...data,
         expirationDate: data.expirationDate?.toDate ? data.expirationDate.toDate() : data.expirationDate,
+        deliveryDate: data.deliveryDate?.toDate ? data.deliveryDate.toDate() : data.deliveryDate,
         createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : data.createdAt,
         updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : data.updatedAt,
       };
@@ -106,6 +117,7 @@ export const getInventoryByCategory = async (req: express.Request, res: express.
         id: doc.id,
         ...data,
         expirationDate: data.expirationDate?.toDate ? data.expirationDate.toDate() : data.expirationDate,
+        deliveryDate: data.deliveryDate?.toDate ? data.deliveryDate.toDate() : data.deliveryDate,
         createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : data.createdAt,
         updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : data.updatedAt,
       };
@@ -124,10 +136,16 @@ export const getInventoryByCategory = async (req: express.Request, res: express.
   }
 };
 
-// Update inventory item quantity (reduce)
+// Update inventory item quantity (reduce) - LIFO (Last In First Out)
 export const updateInventoryQuantity = async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: 'Item ID is required',
+      });
+    }
     const { quantity } = req.body;
 
     // Validate quantity
@@ -151,29 +169,83 @@ export const updateInventoryQuantity = async (req: express.Request, res: express
     }
 
     const currentData = itemDoc.data();
+    const itemName = currentData?.name;
     const currentQuantity = currentData?.quantity || 0;
 
-    // Check if reducing quantity would go below zero
-    const newQuantity = currentQuantity - qty;
-    if (newQuantity < 0) {
+    if (!itemName) {
       return res.status(400).json({
         success: false,
-        message: `Insufficient quantity. Available: ${currentQuantity}`,
+        message: 'Item name not found',
       });
     }
 
-    // Update quantity
-    await itemRef.update({
-      quantity: newQuantity,
-      updatedAt: new Date(),
+    // Check total available quantity across all items with the same name (LIFO)
+    const allItemsSnapshot = await db.collection('inventory')
+      .where('name', '==', itemName)
+      .get();
+
+    // Calculate total available quantity and prepare items for LIFO
+    let totalAvailable = 0;
+    const itemsWithQuantity = allItemsSnapshot.docs.map(doc => {
+      const data = doc.data();
+      const qty = data.quantity || 0;
+      totalAvailable += qty;
+      return {
+        id: doc.id,
+        ref: doc.ref,
+        quantity: qty,
+        createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : new Date(data.createdAt),
+      };
     });
+
+    // Check if we have enough quantity
+    if (totalAvailable < qty) {
+      return res.status(400).json({
+        success: false,
+        message: `Insufficient quantity. Available: ${totalAvailable}`,
+      });
+    }
+
+    // Sort by createdAt descending (newest first) for LIFO
+    itemsWithQuantity.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+    // Reduce quantity using LIFO (Last In First Out)
+    let remainingToReduce = qty;
+    const batch = db.batch();
+
+    for (const item of itemsWithQuantity) {
+      if (remainingToReduce <= 0) break;
+
+      const itemQty = item.quantity;
+
+      if (itemQty > 0) {
+        if (itemQty >= remainingToReduce) {
+          // This item has enough quantity, reduce and we're done
+          batch.update(item.ref, {
+            quantity: itemQty - remainingToReduce,
+            updatedAt: new Date(),
+          });
+          remainingToReduce = 0;
+        } else {
+          // This item doesn't have enough, use all of it and continue
+          batch.update(item.ref, {
+            quantity: 0,
+            updatedAt: new Date(),
+          });
+          remainingToReduce -= itemQty;
+        }
+      }
+    }
+
+    // Commit all updates
+    await batch.commit();
 
     // Get updated document
     const updatedDoc = await itemRef.get();
 
     res.json({
       success: true,
-      message: 'Inventory quantity updated successfully',
+      message: 'Inventory quantity updated successfully (LIFO)',
       data: {
         id: updatedDoc.id,
         ...updatedDoc.data(),
@@ -195,7 +267,13 @@ export const updateInventoryQuantity = async (req: express.Request, res: express
 export const updateInventoryItem = async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
-    const { name, category, quantity, expirationDate, unit } = req.body;
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: 'Item ID is required',
+      });
+    }
+    const { name, category, quantity, expirationDate, deliveryDate, unit } = req.body;
 
     // Check if item exists
     const itemRef = db.collection('inventory').doc(id);
@@ -235,6 +313,16 @@ export const updateInventoryItem = async (req: express.Request, res: express.Res
       }
       updateData.expirationDate = expDate;
     }
+    if (deliveryDate) {
+      const delDate = new Date(deliveryDate);
+      if (isNaN(delDate.getTime())) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Invalid delivery date' 
+        });
+      }
+      updateData.deliveryDate = delDate;
+    }
     if (unit) updateData.unit = unit;
 
     // Update item
@@ -267,6 +355,12 @@ export const updateInventoryItem = async (req: express.Request, res: express.Res
 export const deleteInventoryItem = async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: 'Item ID is required',
+      });
+    }
 
     // Check if item exists
     const itemRef = db.collection('inventory').doc(id);

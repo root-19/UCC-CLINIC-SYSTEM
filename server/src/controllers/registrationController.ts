@@ -110,6 +110,12 @@ export const getRegistrationById = async (req: express.Request, res: express.Res
 export const updateRegistration = async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: 'Registration ID is required',
+      });
+    }
     const { fullname, yearSection, schoolIdNumber, departmentCourse, formToRequest, purpose, status } = req.body;
 
     // Check if registration exists
@@ -134,7 +140,16 @@ export const updateRegistration = async (req: express.Request, res: express.Resp
     if (departmentCourse) updateData.departmentCourse = departmentCourse;
     if (formToRequest) updateData.formToRequest = formToRequest;
     if (purpose) updateData.purpose = purpose;
-    if (status) updateData.status = status;
+    if (status) {
+      // Validate status
+      if (status !== 'active' && status !== 'inactive') {
+        return res.status(400).json({
+          success: false,
+          message: 'Status must be either "active" or "inactive"',
+        });
+      }
+      updateData.status = status;
+    }
 
     // Update registration
     await registrationRef.update(updateData);
@@ -165,6 +180,12 @@ export const updateRegistration = async (req: express.Request, res: express.Resp
 export const deleteRegistration = async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: 'Registration ID is required',
+      });
+    }
 
     // Check if registration exists
     const registrationRef = db.collection('registrations').doc(id);
