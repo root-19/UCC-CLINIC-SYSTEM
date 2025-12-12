@@ -1,88 +1,143 @@
 import { useState, useEffect } from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { env } from '../../config/env';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts';
 
 interface MonthlyReportCardProps {
   onClick?: () => void;
 }
 
+interface MonthlyData {
+  month: string;
+  requests: number;
+  registrations: number;
+  total: number;
+}
+
+interface ReportData {
+  totalRequests: number;
+  totalRegistrations: number;
+  totalStudents: number;
+  medicationData: Array<{ medication: string; requests: number }>;
+  monthlyData: MonthlyData[];
+}
+
 const MonthlyReportCard = ({ onClick }: MonthlyReportCardProps) => {
-  const [outerRadius, setOuterRadius] = useState(60);
-  const [chartHeight, setChartHeight] = useState(250);
+  const [reportData, setReportData] = useState<ReportData | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const updateDimensions = () => {
-      const isMobile = window.innerWidth < 640;
-      setOuterRadius(isMobile ? 60 : 80);
-      setChartHeight(isMobile ? 250 : 300);
-    };
-    
-    updateDimensions();
-    window.addEventListener('resize', updateDimensions);
-    return () => window.removeEventListener('resize', updateDimensions);
+    fetchReportData();
   }, []);
-  // Sample data based on the image
-  const data = [
-    { name: 'Big three diseases', value: 86, color: '#3B82F6' },
-    { name: 'NTDs', value: 81, color: '#EF4444' },
-    { name: 'Infectious diseases', value: 58, color: '#10B981' },
-    { name: 'Others', value: 31, color: '#8B5CF6' },
-  ];
 
-  const COLORS = data.map(item => item.color);
+  const fetchReportData = async () => {
+    try {
+      setLoading(true);
+      const currentYear = new Date().getFullYear();
+      const response = await fetch(`${env.API_URL}/api/reports/medication?year=${currentYear}`);
+      const data = await response.json();
 
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white p-2 border border-gray-200 rounded shadow-lg">
-          <p className="text-sm font-semibold">{payload[0].name}</p>
-          <p className="text-sm text-gray-600">Value: {payload[0].value}</p>
-        </div>
-      );
+      if (data.success) {
+        setReportData(data.data);
+      }
+    } catch (err) {
+      console.error('Error fetching report data:', err);
+    } finally {
+      setLoading(false);
     }
-    return null;
+  };
+
+  const formatMonthLabel = (monthKey: string) => {
+    const [year, month] = monthKey.split('-');
+    const date = new Date(parseInt(year), parseInt(month) - 1);
+    return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
   };
 
   return (
-    <div className="bg-gradient-to-br from-[#D2691E] to-[#B85A1A] rounded-xl p-4 sm:p-6 text-white shadow-professional-lg card-hover animate-fade-in-up animate-delay-300">
-      <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 animate-fade-in animate-delay-400">Monthly Report for Reported Illness</h3>
-      
-      <div className="bg-white rounded-xl p-2 sm:p-4 mb-3 sm:mb-4 overflow-x-auto shadow-inner transition-all duration-300 hover:shadow-lg">
-        <div className="w-full" style={{ height: `${chartHeight}px` }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={data}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ value }) => `${value}`}
-                outerRadius={outerRadius}
-                fill="#8884d8"
-                dataKey="value"
-              >
-              {data.map((_, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index]} />
-              ))}
-            </Pie>
-            <Tooltip content={<CustomTooltip />} />
-            <Legend 
-              verticalAlign="bottom" 
-              height={36}
-              iconType="square"
-              formatter={(value: string) => value}
-              wrapperStyle={{ color: '#000', fontSize: '12px' }}
-              className="text-xs sm:text-sm"
-            />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
+    <div className="bg-white rounded-xl p-4 sm:p-6 shadow-professional-lg card-hover animate-fade-in-up animate-delay-300">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg sm:text-xl font-semibold text-gray-900 animate-fade-in animate-delay-400">
+          Monthly Report Summary
+        </h3>
       </div>
+
+      {loading ? (
+        <div className="flex justify-center items-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-clinic-green"></div>
+        </div>
+      ) : (
+        <>
+          {/* Summary Cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+              <p className="text-sm text-blue-600 font-medium">Total Request Forms</p>
+              <p className="text-2xl font-bold text-blue-900">{reportData?.totalRequests || 0}</p>
+            </div>
+            <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+              <p className="text-sm text-green-600 font-medium">Total Student Records</p>
+              <p className="text-2xl font-bold text-green-900">{reportData?.totalRegistrations || 0}</p>
+            </div>
+            <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
+              <p className="text-sm text-purple-600 font-medium">Total Unique Students</p>
+              <p className="text-2xl font-bold text-purple-900">{reportData?.totalStudents || 0}</p>
+            </div>
+            <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
+              <p className="text-sm text-orange-600 font-medium">Medication Types</p>
+              <p className="text-2xl font-bold text-orange-900">{reportData?.medicationData?.length || 0}</p>
+            </div>
+          </div>
+
+          {/* Monthly Chart */}
+          {reportData?.monthlyData && reportData.monthlyData.length > 0 && (
+            <div className="mb-4">
+              <h4 className="text-md font-semibold text-gray-900 mb-3">
+                Monthly Request Forms & Student Records
+              </h4>
+              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={reportData.monthlyData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis 
+                      dataKey="month" 
+                      tickFormatter={formatMonthLabel}
+                      angle={-45}
+                      textAnchor="end"
+                      height={80}
+                    />
+                    <YAxis />
+                    <Tooltip 
+                      formatter={(value: number, name: string) => {
+                        if (name === 'requests') return [`${value} requests`, 'Request Forms'];
+                        if (name === 'registrations') return [`${value} records`, 'Student Records'];
+                        return [`${value} total`, 'Total'];
+                      }}
+                      labelFormatter={(label) => `Month: ${formatMonthLabel(label)}`}
+                    />
+                    <Legend />
+                    <Bar dataKey="requests" fill="#3B82F6" name="Request Forms" />
+                    <Bar dataKey="registrations" fill="#10B981" name="Student Records" />
+                    <Bar dataKey="total" fill="#8B5CF6" name="Total" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
+        </>
+      )}
 
       <button
         onClick={onClick}
-        className="w-full bg-white text-[#D2691E] py-2.5 sm:py-3 rounded-lg font-semibold text-sm sm:text-base shadow-md transition-all duration-300 hover:bg-gray-50 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0"
+        className="w-full bg-clinic-green text-white py-2.5 sm:py-3 rounded-lg font-semibold text-sm sm:text-base shadow-md transition-all duration-300 hover:bg-clinic-green-hover hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0"
       >
-        View Monthly Report for Reported Illness
+        View Full Monthly Report
       </button>
     </div>
   );

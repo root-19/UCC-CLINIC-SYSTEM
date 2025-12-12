@@ -37,7 +37,44 @@ const OrganizationalChart = ({ className = '' }: OrgChartProps) => {
 
   return (
     <div className={`organizational-chart ${className} animate-fade-in`}>
-      <div className="text-center mb-8 animate-fade-in-up animate-delay-100">
+      {/* Mission Section */}
+      <div className="mb-8 animate-fade-in-up animate-delay-100">
+        <h3 className="text-2xl font-bold text-clinic-green mb-3">MISSION</h3>
+        <p className="text-gray-700 text-lg leading-relaxed">
+          To render medical services to all stakeholders and provide a safe and healthy drug-free and smoke free environment through health education.
+        </p>
+      </div>
+
+      {/* Vision Section */}
+      <div className="mb-8 animate-fade-in-up animate-delay-200">
+        <h3 className="text-2xl font-bold text-clinic-green mb-3">VISION</h3>
+        <p className="text-gray-700 text-lg leading-relaxed">
+          A University Medical Clinic dedicated to providing quality and efficient medical services for the welfare of students, faculty and staff.
+        </p>
+      </div>
+
+      {/* Goals Section */}
+      <div className="mb-8 animate-fade-in-up animate-delay-300">
+        <h3 className="text-2xl font-bold text-clinic-green mb-4">GOALS</h3>
+        <ol className="space-y-3 text-gray-700 text-base leading-relaxed list-decimal list-inside">
+          <li>To maintain the health and well-being of all students and school personnel by providing access to primary, preventive health care service in a school setting.</li>
+          <li>To organize and manage the school clinic according to Department of Health standard and evidence-based practice guidelines.</li>
+          <li>To run the clinic as a first aid center for accidents and injuries that occur in school.</li>
+          <li>To report more serious/major incidents involving students to the parents, directly by telephone, as soon as possible or as per the school protocol.</li>
+          <li>To provide a temporary resting place for ill or sick students or staff.</li>
+          <li>To arrange immediate transfer to hospital for any student or member of staff who requires emergency medical attention.</li>
+          <li>To clearly label and store student's individual medication, in an appropriate and safe manner.</li>
+          <li>To administer medications as prescribed by the school doctor or by written instruction from the parent.</li>
+          <li>To maintain and encourage good practices in hygiene and hand washing throughout the school, by education and example.</li>
+          <li>To follow any health advice given by the Department of Health public health for infectious diseases/epidemics that might affect the students and staff of the school.</li>
+          <li>To follow all Department of Health requirements for student medical exams and record keeping.</li>
+          <li>To help and advise students and staff regarding current health issues as the need arises.</li>
+          <li>To impart knowledge and information on health matters to students through health education/awareness programs and teachings.</li>
+        </ol>
+      </div>
+
+      {/* Organizational Chart Section */}
+      <div className="text-center mb-8 animate-fade-in-up animate-delay-400">
         <h3 className="text-3xl font-bold text-clinic-green mb-2">
           School Clinic Organizational Chart
         </h3>

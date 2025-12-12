@@ -10,7 +10,9 @@ interface RequestFormModalProps {
 
 const RequestFormModal = ({ isOpen, onClose }: RequestFormModalProps) => {
   const [formData, setFormData] = useState({
-    fullname: '',
+    firstName: '',
+    middleName: '',
+    lastName: '',
     yearSection: '',
     schoolIdNumber: '',
     department: '',
@@ -25,18 +27,14 @@ const RequestFormModal = ({ isOpen, onClose }: RequestFormModalProps) => {
 
   // Department list
   const departments = [
-    'College of Business Administration',
+    'College of Business and Accountancy',
     'College of Education',
-    'College of Engineering',
-    'College of Arts and Sciences',
-    'College of Computer Studies',
-    'College of Nursing',
     'College of Criminology',
-    'College of Accountancy',
-    'College of Architecture',
-    'College of Tourism and Hospitality Management',
-    'College of Social Work',
     'College of Law',
+    'Department of Tourism and Hospitality Industry Management',
+    'Computer Studies Department',
+    'Psychology Department',
+    'Political Science Department',
     'Graduate School',
     'Other',
   ];
@@ -77,12 +75,28 @@ const RequestFormModal = ({ isOpen, onClose }: RequestFormModalProps) => {
     }
 
     try {
+      // Combine name fields into fullname for backend
+      const fullname = [formData.firstName, formData.middleName, formData.lastName]
+        .filter(name => name.trim() !== '')
+        .join(' ');
+
+      const requestBody = {
+        fullname,
+        yearSection: formData.yearSection,
+        schoolIdNumber: formData.schoolIdNumber,
+        department: formData.department,
+        assessment: formData.assessment,
+        email: formData.email,
+        requestDate: formData.requestDate,
+        requestTime: formData.requestTime,
+      };
+
       const response = await fetch(`${env.API_URL}/api/requests`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(requestBody),
       });
 
       const data = await response.json();
@@ -94,7 +108,9 @@ const RequestFormModal = ({ isOpen, onClose }: RequestFormModalProps) => {
         const dateStr = now.toISOString().split('T')[0];
         const timeStr = now.toTimeString().slice(0, 5);
         setFormData({
-          fullname: '',
+          firstName: '',
+          middleName: '',
+          lastName: '',
           yearSection: '',
           schoolIdNumber: '',
           department: '',
@@ -151,21 +167,57 @@ const RequestFormModal = ({ isOpen, onClose }: RequestFormModalProps) => {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Fullname */}
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-              <label htmlFor="fullname" className="text-gray-700 font-medium sm:w-40 flex-shrink-0">
-                Fullname:
-              </label>
-              <input
-                type="text"
-                id="fullname"
-                name="fullname"
-                value={formData.fullname}
-                onChange={handleChange}
-                required
-                className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-clinic-green transition-all duration-200 hover:border-clinic-green/50 input-focus"
-                placeholder="Enter your full name"
-              />
+            {/* Name Fields */}
+            <div className="flex flex-col gap-4">
+              {/* First Name */}
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                <label htmlFor="firstName" className="text-gray-700 font-medium sm:w-40 flex-shrink-0">
+                  First Name:
+                </label>
+                <input
+                  type="text"
+                  id="firstName"
+                  name="firstName"
+                  value={formData.firstName}
+                  onChange={handleChange}
+                  required
+                  className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-clinic-green transition-all duration-200 hover:border-clinic-green/50 input-focus"
+                  placeholder="Enter your first name"
+                />
+              </div>
+
+              {/* Middle Name */}
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                <label htmlFor="middleName" className="text-gray-700 font-medium sm:w-40 flex-shrink-0">
+                  Middle Name:
+                </label>
+                <input
+                  type="text"
+                  id="middleName"
+                  name="middleName"
+                  value={formData.middleName}
+                  onChange={handleChange}
+                  className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-clinic-green transition-all duration-200 hover:border-clinic-green/50 input-focus"
+                  placeholder="Enter your middle name (optional)"
+                />
+              </div>
+
+              {/* Last Name */}
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                <label htmlFor="lastName" className="text-gray-700 font-medium sm:w-40 flex-shrink-0">
+                  Last Name:
+                </label>
+                <input
+                  type="text"
+                  id="lastName"
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  required
+                  className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-clinic-green transition-all duration-200 hover:border-clinic-green/50 input-focus"
+                  placeholder="Enter your last name"
+                />
+              </div>
             </div>
 
             {/* Course/Year & Section */}
@@ -246,7 +298,7 @@ const RequestFormModal = ({ isOpen, onClose }: RequestFormModalProps) => {
             {/* Assessment */}
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
               <label htmlFor="assessment" className="text-gray-700 font-medium sm:w-40 flex-shrink-0">
-                Assessment:
+                Form Request:
               </label>
               <input
                 type="text"
@@ -256,7 +308,7 @@ const RequestFormModal = ({ isOpen, onClose }: RequestFormModalProps) => {
                 onChange={handleChange}
                 required
                 className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-clinic-green transition-all duration-200 hover:border-clinic-green/50 input-focus"
-                placeholder="Enter assessment type"
+                placeholder="Enter the form you are requesting"
               />
             </div>
 

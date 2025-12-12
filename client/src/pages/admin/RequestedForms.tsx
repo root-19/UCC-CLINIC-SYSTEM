@@ -305,7 +305,7 @@ const RequestedForms = () => {
                           Department
                         </th>
                         <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                          Assessment
+                         Form Request
                         </th>
                         <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
                           Email
