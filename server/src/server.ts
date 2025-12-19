@@ -10,6 +10,8 @@ import inventoryRoutes from './routes/inventoryRoutes.js';
 import registrationRoutes from './routes/registrationRoutes.js';
 import announcementRoutes from './routes/announcementRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
+import medicalRecordRoutes from './routes/medicalRecordRoutes.js';
+import initAdmin from './scripts/initAdmin.js';
 
 // Load environment variables
 dotenv.config();
@@ -36,10 +38,16 @@ app.use('/api/inventory', inventoryRoutes);
 app.use('/api/registrations', registrationRoutes);
 app.use('/api/announcement', announcementRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/medical-records', medicalRecordRoutes);
 
 // Basic health check route
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'Server is running' });
+});
+
+// Initialize admin user on server start
+initAdmin().catch((error) => {
+  console.error('❌ Failed to initialize admin user:', error);
 });
 
 // Start server

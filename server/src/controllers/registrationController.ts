@@ -4,28 +4,67 @@ import { db } from '../config/db.js';
 // Create student registration
 export const createRegistration = async (req: express.Request, res: express.Response) => {
   try {
-    const { fullname, yearSection, schoolIdNumber, departmentCourse, formToRequest, purpose } = req.body;
+    const { 
+      fullname, 
+      firstName,
+      middleName,
+      lastName,
+      studentIdLrn,
+      age,
+      dateOfBirth,
+      sex,
+      courseYear,
+      yearSection, 
+      schoolIdNumber, 
+      departmentCourse, 
+      contactNumber,
+      address,
+      parentGuardianName,
+      parentGuardianContact,
+      immunizationRecords,
+      previousCheckupRecords,
+      previousInjuriesHospitalizations,
+      chronicIllnesses
+    } = req.body;
 
     // Validate required fields
-    if (!fullname || !yearSection || !schoolIdNumber || !departmentCourse || !formToRequest || !purpose) {
+    if (!fullname || !yearSection || !schoolIdNumber || !departmentCourse || !studentIdLrn || !age || !dateOfBirth || !sex || !courseYear || !contactNumber || !address || !parentGuardianName || !parentGuardianContact) {
       return res.status(400).json({ 
         success: false, 
-        message: 'All fields are required' 
+        message: 'All required fields must be provided' 
       });
     }
 
     // Create registration document
-    const registrationData = {
+    const registrationData: any = {
       fullname,
       yearSection,
       schoolIdNumber,
       departmentCourse,
-      formToRequest,
-      purpose,
+      studentIdLrn,
+      age,
+      dateOfBirth,
+      sex,
+      courseYear,
+      contactNumber,
+      address,
+      parentGuardianName,
+      parentGuardianContact,
       status: 'active',
       createdAt: new Date(),
       updatedAt: new Date(),
     };
+
+    // Add optional fields if provided
+    if (firstName) registrationData.firstName = firstName;
+    if (middleName) registrationData.middleName = middleName;
+    if (lastName) registrationData.lastName = lastName;
+    
+    // Add Health History fields
+    if (immunizationRecords) registrationData.immunizationRecords = immunizationRecords;
+    if (previousCheckupRecords) registrationData.previousCheckupRecords = previousCheckupRecords;
+    if (previousInjuriesHospitalizations) registrationData.previousInjuriesHospitalizations = previousInjuriesHospitalizations;
+    if (chronicIllnesses) registrationData.chronicIllnesses = chronicIllnesses;
 
     // Save to Firestore
     const docRef = await db.collection('registrations').add(registrationData);
@@ -116,7 +155,29 @@ export const updateRegistration = async (req: express.Request, res: express.Resp
         message: 'Registration ID is required',
       });
     }
-    const { fullname, yearSection, schoolIdNumber, departmentCourse, formToRequest, purpose, status } = req.body;
+    const { 
+      fullname, 
+      firstName,
+      middleName,
+      lastName,
+      studentIdLrn,
+      age,
+      dateOfBirth,
+      sex,
+      courseYear,
+      yearSection, 
+      schoolIdNumber, 
+      departmentCourse, 
+      contactNumber,
+      address,
+      parentGuardianName,
+      parentGuardianContact,
+      immunizationRecords,
+      previousCheckupRecords,
+      previousInjuriesHospitalizations,
+      chronicIllnesses,
+      status 
+    } = req.body;
 
     // Check if registration exists
     const registrationRef = db.collection('registrations').doc(id);
@@ -135,11 +196,25 @@ export const updateRegistration = async (req: express.Request, res: express.Resp
     };
 
     if (fullname) updateData.fullname = fullname;
+    if (firstName !== undefined) updateData.firstName = firstName;
+    if (middleName !== undefined) updateData.middleName = middleName;
+    if (lastName !== undefined) updateData.lastName = lastName;
+    if (studentIdLrn) updateData.studentIdLrn = studentIdLrn;
+    if (age) updateData.age = age;
+    if (dateOfBirth) updateData.dateOfBirth = dateOfBirth;
+    if (sex) updateData.sex = sex;
+    if (courseYear) updateData.courseYear = courseYear;
     if (yearSection) updateData.yearSection = yearSection;
     if (schoolIdNumber) updateData.schoolIdNumber = schoolIdNumber;
     if (departmentCourse) updateData.departmentCourse = departmentCourse;
-    if (formToRequest) updateData.formToRequest = formToRequest;
-    if (purpose) updateData.purpose = purpose;
+    if (contactNumber) updateData.contactNumber = contactNumber;
+    if (address) updateData.address = address;
+    if (parentGuardianName) updateData.parentGuardianName = parentGuardianName;
+    if (parentGuardianContact) updateData.parentGuardianContact = parentGuardianContact;
+    if (immunizationRecords !== undefined) updateData.immunizationRecords = immunizationRecords;
+    if (previousCheckupRecords !== undefined) updateData.previousCheckupRecords = previousCheckupRecords;
+    if (previousInjuriesHospitalizations !== undefined) updateData.previousInjuriesHospitalizations = previousInjuriesHospitalizations;
+    if (chronicIllnesses !== undefined) updateData.chronicIllnesses = chronicIllnesses;
     if (status) {
       // Validate status
       if (status !== 'active' && status !== 'inactive') {

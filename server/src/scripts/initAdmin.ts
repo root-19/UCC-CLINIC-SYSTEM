@@ -39,16 +39,5 @@ const initAdmin = async () => {
   }
 };
 
-// Run the initialization
-initAdmin()
-  .then(() => {
-    console.log('✅ Admin initialization complete');
-    process.exit(0);
-  })
-  .catch((error) => {
-    console.error('❌ Admin initialization failed:', error);
-    process.exit(1);
-  });
-
 export default initAdmin;
 
