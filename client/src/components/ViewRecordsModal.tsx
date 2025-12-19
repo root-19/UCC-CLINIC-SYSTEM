@@ -46,7 +46,12 @@ const ViewRecordsModal = ({ isOpen, onClose, studentId, studentData }: ViewRecor
     try {
       setLoading(true);
       setError('');
-      const response = await fetch(`${env.API_URL}/api/medical-records?studentId=${studentId}`);
+      // Query by both studentId and schoolIdNumber to catch all records
+      const params = new URLSearchParams();
+      if (studentId) params.append('studentId', studentId);
+      if (studentData.schoolIdNumber) params.append('schoolIdNumber', studentData.schoolIdNumber);
+      
+      const response = await fetch(`${env.API_URL}/api/medical-records?${params.toString()}`);
       const data = await response.json();
 
       if (data.success) {
@@ -167,6 +172,17 @@ const ViewRecordsModal = ({ isOpen, onClose, studentId, studentData }: ViewRecor
                       <span className="font-medium">Attended by:</span> {record.attendingPersonnelName}
                     </p>
                   </div>
+                  <div className="mt-3 pt-3 border-t border-gray-200">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleViewRecord(record);
+                      }}
+                      className="text-sm text-clinic-green hover:text-clinic-green-hover font-medium"
+                    >
+                      View Full Details →
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -224,131 +240,104 @@ const ViewRecordsModal = ({ isOpen, onClose, studentId, studentData }: ViewRecor
               </div>
 
               {/* Vital Signs */}
-              {(selectedRecord.temperature || selectedRecord.bloodPressure || selectedRecord.heartRate) && (
-                <div className="border-b border-gray-200 pb-4">
-                  <h3 className="text-lg font-semibold text-clinic-green mb-3">Vital Signs</h3>
-                  <div className="grid grid-cols-3 gap-4 text-sm">
-                    {selectedRecord.temperature && (
-                      <div><span className="font-medium">Temperature:</span> {selectedRecord.temperature}°C</div>
-                    )}
-                    {selectedRecord.bloodPressure && (
-                      <div><span className="font-medium">Blood Pressure:</span> {selectedRecord.bloodPressure}</div>
-                    )}
-                    {selectedRecord.heartRate && (
-                      <div><span className="font-medium">Heart Rate:</span> {selectedRecord.heartRate} bpm</div>
-                    )}
-                    {selectedRecord.respiratoryRate && (
-                      <div><span className="font-medium">Respiratory Rate:</span> {selectedRecord.respiratoryRate}</div>
-                    )}
-                    {selectedRecord.weight && (
-                      <div><span className="font-medium">Weight:</span> {selectedRecord.weight} kg</div>
-                    )}
-                    {selectedRecord.height && (
-                      <div><span className="font-medium">Height:</span> {selectedRecord.height} cm</div>
-                    )}
+              <div className="border-b border-gray-200 pb-4">
+                <h3 className="text-lg font-semibold text-clinic-green mb-3">Vital Signs</h3>
+                <div className="grid grid-cols-3 gap-4 text-sm">
+                  <div>
+                    <span className="font-medium">Temperature:</span> {selectedRecord.temperature ? `${selectedRecord.temperature}°C` : 'N/A'}
+                  </div>
+                  <div>
+                    <span className="font-medium">Blood Pressure:</span> {selectedRecord.bloodPressure || 'N/A'}
+                  </div>
+                  <div>
+                    <span className="font-medium">Heart Rate:</span> {selectedRecord.heartRate ? `${selectedRecord.heartRate} bpm` : 'N/A'}
+                  </div>
+                  <div>
+                    <span className="font-medium">Respiratory Rate:</span> {selectedRecord.respiratoryRate || 'N/A'}
+                  </div>
+                  <div>
+                    <span className="font-medium">Weight:</span> {selectedRecord.weight ? `${selectedRecord.weight} kg` : 'N/A'}
+                  </div>
+                  <div>
+                    <span className="font-medium">Height:</span> {selectedRecord.height ? `${selectedRecord.height} cm` : 'N/A'}
                   </div>
                 </div>
-              )}
+              </div>
 
               {/* Medical Assessment */}
-              {(selectedRecord.initialAssessment || selectedRecord.diagnosis || selectedRecord.symptomsObserved) && (
-                <div className="border-b border-gray-200 pb-4">
-                  <h3 className="text-lg font-semibold text-clinic-green mb-3">Medical Assessment</h3>
-                  <div className="space-y-2 text-sm">
-                    {selectedRecord.initialAssessment && (
-                      <div>
-                        <span className="font-medium">Initial Assessment:</span>
-                        <p className="mt-1 text-gray-700">{selectedRecord.initialAssessment}</p>
-                      </div>
-                    )}
-                    {selectedRecord.diagnosis && (
-                      <div>
-                        <span className="font-medium">Diagnosis:</span> {selectedRecord.diagnosis}
-                      </div>
-                    )}
-                    {selectedRecord.symptomsObserved && (
-                      <div>
-                        <span className="font-medium">Symptoms:</span>
-                        <p className="mt-1 text-gray-700">{selectedRecord.symptomsObserved}</p>
-                      </div>
-                    )}
-                    {selectedRecord.allergies && (
-                      <div>
-                        <span className="font-medium">Allergies:</span> {selectedRecord.allergies}
-                      </div>
-                    )}
-                    {selectedRecord.existingMedicalConditions && (
-                      <div>
-                        <span className="font-medium">Existing Conditions:</span> {selectedRecord.existingMedicalConditions}
-                      </div>
-                    )}
+              <div className="border-b border-gray-200 pb-4">
+                <h3 className="text-lg font-semibold text-clinic-green mb-3">Medical Assessment</h3>
+                <div className="space-y-2 text-sm">
+                  <div>
+                    <span className="font-medium">Initial Assessment:</span>
+                    <p className="mt-1 text-gray-700">{selectedRecord.initialAssessment || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <span className="font-medium">Diagnosis:</span> {selectedRecord.diagnosis || 'N/A'}
+                  </div>
+                  <div>
+                    <span className="font-medium">Symptoms Observed:</span>
+                    <p className="mt-1 text-gray-700">{selectedRecord.symptomsObserved || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <span className="font-medium">Allergies:</span> {selectedRecord.allergies || 'N/A'}
+                  </div>
+                  <div>
+                    <span className="font-medium">Existing Medical Conditions:</span> {selectedRecord.existingMedicalConditions || 'N/A'}
                   </div>
                 </div>
-              )}
+              </div>
 
               {/* Treatment */}
-              {(selectedRecord.medicationGiven || selectedRecord.firstAidProvided || selectedRecord.adviceGiven) && (
-                <div className="border-b border-gray-200 pb-4">
-                  <h3 className="text-lg font-semibold text-clinic-green mb-3">Treatment / Action Taken</h3>
-                  <div className="space-y-2 text-sm">
-                    {selectedRecord.medicationGiven && (
-                      <div>
-                        <span className="font-medium">Medication:</span>
-                        <p className="mt-1 text-gray-700">{selectedRecord.medicationGiven}</p>
-                      </div>
-                    )}
-                    {selectedRecord.firstAidProvided && (
-                      <div>
-                        <span className="font-medium">First Aid:</span>
-                        <p className="mt-1 text-gray-700">{selectedRecord.firstAidProvided}</p>
-                      </div>
-                    )}
-                    {selectedRecord.proceduresDone && (
-                      <div>
-                        <span className="font-medium">Procedures:</span>
-                        <p className="mt-1 text-gray-700">{selectedRecord.proceduresDone}</p>
-                      </div>
-                    )}
-                    {selectedRecord.adviceGiven && (
-                      <div>
-                        <span className="font-medium">Advice:</span>
-                        <p className="mt-1 text-gray-700">{selectedRecord.adviceGiven}</p>
-                      </div>
-                    )}
-                    <div className="grid grid-cols-2 gap-4 mt-2">
-                      <div>
-                        <span className="font-medium">Sent Home:</span> {selectedRecord.sentHome}
-                      </div>
-                      <div>
-                        <span className="font-medium">Parent Notified:</span> {selectedRecord.parentNotified}
-                      </div>
+              <div className="border-b border-gray-200 pb-4">
+                <h3 className="text-lg font-semibold text-clinic-green mb-3">Treatment / Action Taken</h3>
+                <div className="space-y-2 text-sm">
+                  <div>
+                    <span className="font-medium">Medication Given:</span>
+                    <p className="mt-1 text-gray-700">{selectedRecord.medicationGiven || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <span className="font-medium">First Aid Provided:</span>
+                    <p className="mt-1 text-gray-700">{selectedRecord.firstAidProvided || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <span className="font-medium">Procedures Done:</span>
+                    <p className="mt-1 text-gray-700">{selectedRecord.proceduresDone || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <span className="font-medium">Advice Given:</span>
+                    <p className="mt-1 text-gray-700">{selectedRecord.adviceGiven || 'N/A'}</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 mt-2">
+                    <div>
+                      <span className="font-medium">Sent Home:</span> {selectedRecord.sentHome || 'N/A'}
+                    </div>
+                    <div>
+                      <span className="font-medium">Parent Notified:</span> {selectedRecord.parentNotified || 'N/A'}
                     </div>
                   </div>
                 </div>
-              )}
+              </div>
 
               {/* Referral */}
-              {selectedRecord.referredTo && (
-                <div className="border-b border-gray-200 pb-4">
-                  <h3 className="text-lg font-semibold text-clinic-green mb-3">Referral Information</h3>
-                  <div className="space-y-2 text-sm">
-                    <div>
-                      <span className="font-medium">Referred to:</span> {selectedRecord.referredTo}
-                    </div>
-                    {selectedRecord.referralReason && (
-                      <div>
-                        <span className="font-medium">Reason:</span>
-                        <p className="mt-1 text-gray-700">{selectedRecord.referralReason}</p>
-                      </div>
-                    )}
-                    {selectedRecord.transportAssistance && (
-                      <div>
-                        <span className="font-medium">Transport:</span> {selectedRecord.transportAssistance}
-                      </div>
-                    )}
+              <div className="border-b border-gray-200 pb-4">
+                <h3 className="text-lg font-semibold text-clinic-green mb-3">Referral Information</h3>
+                <div className="space-y-2 text-sm">
+                  <div>
+                    <span className="font-medium">Referred to:</span> {selectedRecord.referredTo || 'N/A'}
+                  </div>
+                  <div>
+                    <span className="font-medium">Reason for Referral:</span>
+                    <p className="mt-1 text-gray-700">{selectedRecord.referralReason || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <span className="font-medium">Time Referred:</span> {selectedRecord.referralTime || 'N/A'}
+                  </div>
+                  <div>
+                    <span className="font-medium">Transport Assistance:</span> {selectedRecord.transportAssistance || 'N/A'}
                   </div>
                 </div>
-              )}
+              </div>
 
               {/* Attending Personnel */}
               <div className="pb-4">

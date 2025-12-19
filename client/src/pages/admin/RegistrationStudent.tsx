@@ -5,15 +5,31 @@ import AdminSidebar from '../../components/admin/AdminSidebar';
 import AdminTopBar from '../../components/admin/AdminTopBar';
 import bgClinic from '../../assets/images/bg-clinic.png';
 import { env } from '../../config/env';
+import ViewRecordsModal from '../../components/ViewRecordsModal';
 
 interface RegistrationForm {
   id: string;
   fullname: string;
+  firstName?: string;
+  middleName?: string;
+  lastName?: string;
+  studentIdLrn?: string;
+  age?: string;
+  dateOfBirth?: string;
+  sex?: string;
+  courseYear?: string;
   yearSection: string;
   schoolIdNumber: string;
   departmentCourse: string;
-  formToRequest: string;
-  purpose: string;
+  contactNumber?: string;
+  address?: string;
+  parentGuardianName?: string;
+  parentGuardianContact?: string;
+  // Health History
+  immunizationRecords?: string;
+  previousCheckupRecords?: string;
+  previousInjuriesHospitalizations?: string;
+  chronicIllnesses?: string;
   status: string;
   createdAt: any;
   updatedAt: any;
@@ -32,15 +48,46 @@ const RegistrationStudent = () => {
   const [error, setError] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [viewRecordsModalOpen, setViewRecordsModalOpen] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<RegistrationForm | null>(null);
+
+  // Department list - same as request form
+  const departments = [
+    'College of Business and Accountancy',
+    'College of Education',
+    'College of Criminology',
+    'College of Law',
+    'Department of Tourism and Hospitality Industry Management',
+    'Computer Studies Department',
+    'Psychology Department',
+    'Political Science Department',
+    'Graduate School',
+    'Other',
+  ];
 
   // Form state
   const [formData, setFormData] = useState({
     fullname: '',
+    firstName: '',
+    middleName: '',
+    lastName: '',
+    studentIdLrn: '',
+    age: '',
+    dateOfBirth: '',
+    sex: '',
+    courseYear: '',
     yearSection: '',
     schoolIdNumber: '',
     departmentCourse: '',
-    formToRequest: '',
-    purpose: '',
+    contactNumber: '',
+    address: '',
+    parentGuardianName: '',
+    parentGuardianContact: '',
+    // Health History
+    immunizationRecords: '',
+    previousCheckupRecords: '',
+    previousInjuriesHospitalizations: '',
+    chronicIllnesses: '',
   });
 
   useEffect(() => {
@@ -54,8 +101,8 @@ const RegistrationStudent = () => {
     fetchRegistrations();
   }, []);
 
-  // Get unique departments
-  const departments = Array.from(new Set(registrations.map(r => r.departmentCourse).filter(Boolean))).sort();
+  // Get unique departments from existing registrations (for filter dropdown)
+  const uniqueDepartments = Array.from(new Set(registrations.map(r => r.departmentCourse).filter(Boolean))).sort();
 
   // Filter registrations based on search, department, and status
   useEffect(() => {
@@ -79,10 +126,10 @@ const RegistrationStudent = () => {
       filtered = filtered.filter(r =>
         r.fullname.toLowerCase().includes(query) ||
         r.schoolIdNumber.toLowerCase().includes(query) ||
+        (r.studentIdLrn && r.studentIdLrn.toLowerCase().includes(query)) ||
         r.yearSection.toLowerCase().includes(query) ||
         r.departmentCourse.toLowerCase().includes(query) ||
-        r.formToRequest.toLowerCase().includes(query) ||
-        r.purpose.toLowerCase().includes(query)
+        (r.contactNumber && r.contactNumber.toLowerCase().includes(query))
       );
     }
 
@@ -109,12 +156,17 @@ const RegistrationStudent = () => {
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value,
     }));
+  };
+
+  const handleViewRecord = (registration: RegistrationForm) => {
+    setSelectedStudent(registration);
+    setViewRecordsModalOpen(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -134,11 +186,25 @@ const RegistrationStudent = () => {
         setShowAddForm(false);
         setFormData({
           fullname: '',
+          firstName: '',
+          middleName: '',
+          lastName: '',
+          studentIdLrn: '',
+          age: '',
+          dateOfBirth: '',
+          sex: '',
+          courseYear: '',
           yearSection: '',
           schoolIdNumber: '',
           departmentCourse: '',
-          formToRequest: '',
-          purpose: '',
+          contactNumber: '',
+          address: '',
+          parentGuardianName: '',
+          parentGuardianContact: '',
+          immunizationRecords: '',
+          previousCheckupRecords: '',
+          previousInjuriesHospitalizations: '',
+          chronicIllnesses: '',
         });
         fetchRegistrations();
       } else {
@@ -295,7 +361,7 @@ const RegistrationStudent = () => {
                 <div className="relative">
                   <input
                     type="text"
-                    placeholder="Search by name, ID, department, form, or purpose..."
+                    placeholder="Search by name, ID, department, or contact..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full px-4 py-2.5 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-clinic-green focus:border-transparent transition-all duration-200 hover:border-clinic-green/50 input-focus animate-fade-in-up animate-delay-300"
@@ -328,7 +394,7 @@ const RegistrationStudent = () => {
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-clinic-green focus:border-transparent bg-white transition-all duration-200 hover:border-clinic-green/50 input-focus animate-fade-in-up animate-delay-400"
                   >
                     <option value="">All Departments</option>
-                    {departments.map((dept) => (
+                    {uniqueDepartments.map((dept) => (
                       <option key={dept} value={dept}>
                         {dept}
                       </option>
@@ -347,91 +413,303 @@ const RegistrationStudent = () => {
               {showAddForm && (
                 <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
                   <h2 className="text-xl font-semibold mb-4 text-gray-900">Add New Student Registration</h2>
-                  <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Fullname *
-                      </label>
-                      <input
-                        type="text"
-                        name="fullname"
-                        value={formData.fullname}
-                        onChange={handleInputChange}
-                        required
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-clinic-green focus:border-transparent"
-                        placeholder="Enter full name"
-                      />
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    {/* Section 1: Student Information */}
+                    <div className="border-b border-gray-300 pb-4">
+                      <h3 className="text-lg font-semibold text-clinic-green mb-3">1. Student Information</h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Student ID / LRN *
+                          </label>
+                          <input
+                            type="text"
+                            name="studentIdLrn"
+                            value={formData.studentIdLrn}
+                            onChange={handleInputChange}
+                            required
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-clinic-green focus:border-transparent"
+                            placeholder="Enter Student ID or LRN"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Full Name *
+                          </label>
+                          <input
+                            type="text"
+                            name="fullname"
+                            value={formData.fullname}
+                            onChange={handleInputChange}
+                            required
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-clinic-green focus:border-transparent"
+                            placeholder="Enter full name"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            First Name *
+                          </label>
+                          <input
+                            type="text"
+                            name="firstName"
+                            value={formData.firstName}
+                            onChange={handleInputChange}
+                            required
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-clinic-green focus:border-transparent"
+                            placeholder="First name"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Middle Name
+                          </label>
+                          <input
+                            type="text"
+                            name="middleName"
+                            value={formData.middleName}
+                            onChange={handleInputChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-clinic-green focus:border-transparent"
+                            placeholder="Middle name"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Last Name *
+                          </label>
+                          <input
+                            type="text"
+                            name="lastName"
+                            value={formData.lastName}
+                            onChange={handleInputChange}
+                            required
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-clinic-green focus:border-transparent"
+                            placeholder="Last name"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Age *
+                          </label>
+                          <input
+                            type="number"
+                            name="age"
+                            value={formData.age}
+                            onChange={handleInputChange}
+                            required
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-clinic-green focus:border-transparent"
+                            placeholder="Enter age"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Date of Birth *
+                          </label>
+                          <input
+                            type="date"
+                            name="dateOfBirth"
+                            value={formData.dateOfBirth}
+                            onChange={handleInputChange}
+                            required
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-clinic-green focus:border-transparent"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Sex *
+                          </label>
+                          <select
+                            name="sex"
+                            value={formData.sex}
+                            onChange={handleInputChange}
+                            required
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-clinic-green focus:border-transparent bg-white"
+                          >
+                            <option value="">Select Sex</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Course & Year *
+                          </label>
+                          <input
+                            type="text"
+                            name="courseYear"
+                            value={formData.courseYear}
+                            onChange={handleInputChange}
+                            required
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-clinic-green focus:border-transparent"
+                            placeholder="e.g., BSIT - 3rd Year"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Year & Section *
+                          </label>
+                          <input
+                            type="text"
+                            name="yearSection"
+                            value={formData.yearSection}
+                            onChange={handleInputChange}
+                            required
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-clinic-green focus:border-transparent"
+                            placeholder="e.g., 3rd Year - Section A"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Department/Course *
+                          </label>
+                          <select
+                            name="departmentCourse"
+                            value={formData.departmentCourse}
+                            onChange={handleInputChange}
+                            required
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-clinic-green focus:border-transparent bg-white"
+                          >
+                            <option value="">Select Department</option>
+                            {departments.map((dept) => (
+                              <option key={dept} value={dept}>
+                                {dept}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            School ID Number *
+                          </label>
+                          <input
+                            type="text"
+                            name="schoolIdNumber"
+                            value={formData.schoolIdNumber}
+                            onChange={handleInputChange}
+                            required
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-clinic-green focus:border-transparent"
+                            placeholder="Enter school ID"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Contact Number *
+                          </label>
+                          <input
+                            type="text"
+                            name="contactNumber"
+                            value={formData.contactNumber}
+                            onChange={handleInputChange}
+                            required
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-clinic-green focus:border-transparent"
+                            placeholder="Enter contact number"
+                          />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Address *
+                          </label>
+                          <textarea
+                            name="address"
+                            value={formData.address}
+                            onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                            required
+                            rows={2}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-clinic-green focus:border-transparent"
+                            placeholder="Enter address"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Parent/Guardian Name *
+                          </label>
+                          <input
+                            type="text"
+                            name="parentGuardianName"
+                            value={formData.parentGuardianName}
+                            onChange={handleInputChange}
+                            required
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-clinic-green focus:border-transparent"
+                            placeholder="Enter parent/guardian name"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Parent/Guardian Contact *
+                          </label>
+                          <input
+                            type="text"
+                            name="parentGuardianContact"
+                            value={formData.parentGuardianContact}
+                            onChange={handleInputChange}
+                            required
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-clinic-green focus:border-transparent"
+                            placeholder="Enter parent/guardian contact"
+                          />
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Year & Section *
-                      </label>
-                      <input
-                        type="text"
-                        name="yearSection"
-                        value={formData.yearSection}
-                        onChange={handleInputChange}
-                        required
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-clinic-green focus:border-transparent"
-                        placeholder="e.g., 3rd Year - Section A"
-                      />
+
+                    {/* Section 6: Health History */}
+                    <div className="border-b border-gray-300 pb-4">
+                      <h3 className="text-lg font-semibold text-clinic-green mb-3">6. Health History</h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="sm:col-span-2">
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Immunization Records
+                          </label>
+                          <textarea
+                            name="immunizationRecords"
+                            value={formData.immunizationRecords}
+                            onChange={(e) => setFormData({ ...formData, immunizationRecords: e.target.value })}
+                            rows={3}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-clinic-green focus:border-transparent"
+                            placeholder="Enter immunization records (e.g., vaccines received, dates)"
+                          />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Previous Check-up Records
+                          </label>
+                          <textarea
+                            name="previousCheckupRecords"
+                            value={formData.previousCheckupRecords}
+                            onChange={(e) => setFormData({ ...formData, previousCheckupRecords: e.target.value })}
+                            rows={3}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-clinic-green focus:border-transparent"
+                            placeholder="Enter previous check-up records"
+                          />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Previous Injuries / Hospitalizations
+                          </label>
+                          <textarea
+                            name="previousInjuriesHospitalizations"
+                            value={formData.previousInjuriesHospitalizations}
+                            onChange={(e) => setFormData({ ...formData, previousInjuriesHospitalizations: e.target.value })}
+                            rows={3}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-clinic-green focus:border-transparent"
+                            placeholder="Enter previous injuries or hospitalizations"
+                          />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Chronic Illnesses
+                          </label>
+                          <textarea
+                            name="chronicIllnesses"
+                            value={formData.chronicIllnesses}
+                            onChange={(e) => setFormData({ ...formData, chronicIllnesses: e.target.value })}
+                            rows={3}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-clinic-green focus:border-transparent"
+                            placeholder="Enter chronic illnesses (e.g., Asthma, diabetes, heart condition, etc.)"
+                          />
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        School ID Number *
-                      </label>
-                      <input
-                        type="text"
-                        name="schoolIdNumber"
-                        value={formData.schoolIdNumber}
-                        onChange={handleInputChange}
-                        required
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-clinic-green focus:border-transparent"
-                        placeholder="Enter school ID"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Department/Course *
-                      </label>
-                      <input
-                        type="text"
-                        name="departmentCourse"
-                        value={formData.departmentCourse}
-                        onChange={handleInputChange}
-                        required
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-clinic-green focus:border-transparent"
-                        placeholder="Enter department/course"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Form to Request *
-                      </label>
-                      <input
-                        type="text"
-                        name="formToRequest"
-                        value={formData.formToRequest}
-                        onChange={handleInputChange}
-                        required
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-clinic-green focus:border-transparent"
-                        placeholder="e.g., Medical Certificate"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Purpose *
-                      </label>
-                      <input
-                        type="text"
-                        name="purpose"
-                        value={formData.purpose}
-                        onChange={handleInputChange}
-                        required
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-clinic-green focus:border-transparent"
-                        placeholder="Enter purpose"
-                      />
-                    </div>
+
                     <div className="sm:col-span-2">
                       <button
                         type="submit"
@@ -485,6 +763,9 @@ const RegistrationStudent = () => {
                         </div>
                         <div className="space-y-2 text-sm">
                           <p>
+                            <span className="font-medium">Student ID/LRN:</span> {registration.studentIdLrn || 'N/A'}
+                          </p>
+                          <p>
                             <span className="font-medium">Year & Section:</span> {registration.yearSection}
                           </p>
                           <p>
@@ -494,10 +775,7 @@ const RegistrationStudent = () => {
                             <span className="font-medium">Department/Course:</span> {registration.departmentCourse}
                           </p>
                           <p>
-                            <span className="font-medium">Form to Request:</span> {registration.formToRequest}
-                          </p>
-                          <p>
-                            <span className="font-medium">Purpose:</span> {registration.purpose}
+                            <span className="font-medium">Contact:</span> {registration.contactNumber || 'N/A'}
                           </p>
                           <p className="text-xs text-gray-500 mt-3">
                             Registered: {formatDate(registration.createdAt)}
@@ -505,6 +783,12 @@ const RegistrationStudent = () => {
                         </div>
                         {/* Action Buttons */}
                         <div className="mt-4 flex gap-2">
+                          <button
+                            onClick={() => handleViewRecord(registration)}
+                            className="flex-1 px-3 py-2 bg-clinic-green text-white rounded-lg hover:bg-clinic-green-hover transition-colors text-sm font-medium"
+                          >
+                            View Record
+                          </button>
                           {registration.status === 'active' ? (
                             <button
                               onClick={() => handleUpdateStatus(registration.id, 'inactive')}
@@ -535,6 +819,9 @@ const RegistrationStudent = () => {
                           Fullname
                         </th>
                         <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                          Student ID/LRN
+                        </th>
+                        <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
                           Year & Section
                         </th>
                         <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
@@ -544,10 +831,7 @@ const RegistrationStudent = () => {
                           Department/Course
                         </th>
                         <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                          Form to Request
-                        </th>
-                        <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                          Purpose
+                          Contact
                         </th>
                         <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
                           Status
@@ -564,6 +848,9 @@ const RegistrationStudent = () => {
                             {registration.fullname}
                           </td>
                           <td className="border border-gray-300 px-4 py-3 text-sm text-gray-700">
+                            {registration.studentIdLrn || 'N/A'}
+                          </td>
+                          <td className="border border-gray-300 px-4 py-3 text-sm text-gray-700">
                             {registration.yearSection}
                           </td>
                           <td className="border border-gray-300 px-4 py-3 text-sm text-gray-700">
@@ -573,16 +860,20 @@ const RegistrationStudent = () => {
                             {registration.departmentCourse}
                           </td>
                           <td className="border border-gray-300 px-4 py-3 text-sm text-gray-700">
-                            {registration.formToRequest}
-                          </td>
-                          <td className="border border-gray-300 px-4 py-3 text-sm text-gray-700">
-                            {registration.purpose}
+                            {registration.contactNumber || 'N/A'}
                           </td>
                           <td className="border border-gray-300 px-4 py-3">
                             {getStatusBadge(registration.status || 'active')}
                           </td>
                           <td className="border border-gray-300 px-4 py-3">
                             <div className="flex gap-2">
+                              <button
+                                onClick={() => handleViewRecord(registration)}
+                                className="px-3 py-1 bg-clinic-green text-white rounded hover:bg-clinic-green-hover transition-colors text-xs font-medium"
+                                title="View Record"
+                              >
+                                View Record
+                              </button>
                               {registration.status === 'active' ? (
                                 <button
                                   onClick={() => handleUpdateStatus(registration.id, 'inactive')}
@@ -620,6 +911,27 @@ const RegistrationStudent = () => {
           </div>
         </main>
       </div>
+
+      {/* View Records Modal */}
+      {selectedStudent && (
+        <ViewRecordsModal
+          isOpen={viewRecordsModalOpen}
+          onClose={() => {
+            setViewRecordsModalOpen(false);
+            setSelectedStudent(null);
+          }}
+          studentId={selectedStudent.id}
+          studentData={{
+            fullname: selectedStudent.fullname,
+            firstName: selectedStudent.firstName,
+            middleName: selectedStudent.middleName,
+            lastName: selectedStudent.lastName,
+            schoolIdNumber: selectedStudent.schoolIdNumber,
+            department: selectedStudent.departmentCourse,
+            yearSection: selectedStudent.yearSection,
+          }}
+        />
+      )}
     </div>
   );
 };
