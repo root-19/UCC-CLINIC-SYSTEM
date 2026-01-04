@@ -4,12 +4,11 @@ import logoClinic from '../assets/images/logo-clinic.png';
 
 const Header = ({ 
   logo = logoClinic, 
+  // Removed the login nav link; clicking the logo will now trigger login if `onLoginClick` is provided
   navLinks = [
     { label: 'About Us', path: '/about' },
     { label: 'Announcement', path: '/announcement' },
-    { label: 'Request Form', path: '/request-form' },
-    { label: 'login', path: '/login' }
-
+    { label: 'Request Form', path: '/request-form' }
   ],
   onAboutUsClick,
   onLoginClick,
@@ -21,6 +20,12 @@ const Header = ({
 
   const handleLogoClick = (e: React.MouseEvent) => {
     e.preventDefault();
+    // If a login handler is provided, open the login modal when logo is clicked
+    if (onLoginClick) {
+      onLoginClick();
+      return;
+    }
+
     if (location.pathname === '/') {
       // If already on home page, scroll to top
       window.scrollTo({ top: 0, behavior: 'smooth' });
