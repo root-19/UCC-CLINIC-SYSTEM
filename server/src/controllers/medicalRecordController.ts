@@ -211,15 +211,16 @@ export const getMedicalRecords = async (req: express.Request, res: express.Respo
 export const getMedicalRecordById = async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
+    const recordId = Array.isArray(id) ? id[0] : id;
     
-    if (!id) {
+    if (!recordId) {
       return res.status(400).json({
         success: false,
         message: 'Record ID is required',
       });
     }
 
-    const docRef = db.collection('medicalRecords').doc(id);
+    const docRef = db.collection('medicalRecords').doc(recordId);
     const doc = await docRef.get();
 
     if (!doc.exists) {
@@ -254,15 +255,16 @@ export const getMedicalRecordById = async (req: express.Request, res: express.Re
 export const deleteMedicalRecord = async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
+    const recordId = Array.isArray(id) ? id[0] : id;
     
-    if (!id) {
+    if (!recordId) {
       return res.status(400).json({
         success: false,
         message: 'Record ID is required',
       });
     }
 
-    const recordRef = db.collection('medicalRecords').doc(id);
+    const recordRef = db.collection('medicalRecords').doc(recordId);
     const recordDoc = await recordRef.get();
 
     if (!recordDoc.exists) {

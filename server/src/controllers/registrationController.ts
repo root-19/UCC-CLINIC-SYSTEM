@@ -116,8 +116,16 @@ export const getRegistrations = async (req: express.Request, res: express.Respon
 export const getRegistrationById = async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
+    const registrationId = Array.isArray(id) ? id[0] : id;
 
-    const registrationDoc = await db.collection('registrations').doc(id).get();
+    if (!registrationId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Registration ID is required',
+      });
+    }
+
+    const registrationDoc = await db.collection('registrations').doc(registrationId).get();
 
     if (!registrationDoc.exists) {
       return res.status(404).json({
@@ -149,7 +157,8 @@ export const getRegistrationById = async (req: express.Request, res: express.Res
 export const updateRegistration = async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
-    if (!id) {
+    const registrationId = Array.isArray(id) ? id[0] : id;
+    if (!registrationId) {
       return res.status(400).json({
         success: false,
         message: 'Registration ID is required',
@@ -180,7 +189,7 @@ export const updateRegistration = async (req: express.Request, res: express.Resp
     } = req.body;
 
     // Check if registration exists
-    const registrationRef = db.collection('registrations').doc(id);
+    const registrationRef = db.collection('registrations').doc(registrationId);
     const registrationDoc = await registrationRef.get();
 
     if (!registrationDoc.exists) {
@@ -255,7 +264,8 @@ export const updateRegistration = async (req: express.Request, res: express.Resp
 export const deleteRegistration = async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
-    if (!id) {
+    const registrationId = Array.isArray(id) ? id[0] : id;
+    if (!registrationId) {
       return res.status(400).json({
         success: false,
         message: 'Registration ID is required',
@@ -263,7 +273,7 @@ export const deleteRegistration = async (req: express.Request, res: express.Resp
     }
 
     // Check if registration exists
-    const registrationRef = db.collection('registrations').doc(id);
+    const registrationRef = db.collection('registrations').doc(registrationId);
     const registrationDoc = await registrationRef.get();
 
     if (!registrationDoc.exists) {

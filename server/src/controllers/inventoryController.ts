@@ -140,7 +140,8 @@ export const getInventoryByCategory = async (req: express.Request, res: express.
 export const updateInventoryQuantity = async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
-    if (!id) {
+    const itemId = Array.isArray(id) ? id[0] : id;
+    if (!itemId) {
       return res.status(400).json({
         success: false,
         message: 'Item ID is required',
@@ -158,7 +159,7 @@ export const updateInventoryQuantity = async (req: express.Request, res: express
     }
 
     // Check if item exists
-    const itemRef = db.collection('inventory').doc(id);
+    const itemRef = db.collection('inventory').doc(itemId);
     const itemDoc = await itemRef.get();
 
     if (!itemDoc.exists) {
@@ -267,7 +268,8 @@ export const updateInventoryQuantity = async (req: express.Request, res: express
 export const updateInventoryItem = async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
-    if (!id) {
+    const itemId = Array.isArray(id) ? id[0] : id;
+    if (!itemId) {
       return res.status(400).json({
         success: false,
         message: 'Item ID is required',
@@ -276,7 +278,7 @@ export const updateInventoryItem = async (req: express.Request, res: express.Res
     const { name, category, quantity, expirationDate, deliveryDate, unit } = req.body;
 
     // Check if item exists
-    const itemRef = db.collection('inventory').doc(id);
+    const itemRef = db.collection('inventory').doc(itemId);
     const itemDoc = await itemRef.get();
 
     if (!itemDoc.exists) {
@@ -355,7 +357,8 @@ export const updateInventoryItem = async (req: express.Request, res: express.Res
 export const deleteInventoryItem = async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
-    if (!id) {
+    const itemId = Array.isArray(id) ? id[0] : id;
+    if (!itemId) {
       return res.status(400).json({
         success: false,
         message: 'Item ID is required',
@@ -363,7 +366,7 @@ export const deleteInventoryItem = async (req: express.Request, res: express.Res
     }
 
     // Check if item exists
-    const itemRef = db.collection('inventory').doc(id);
+    const itemRef = db.collection('inventory').doc(itemId);
     const itemDoc = await itemRef.get();
 
     if (!itemDoc.exists) {

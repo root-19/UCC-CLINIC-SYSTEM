@@ -115,7 +115,8 @@ export const getRequests = async (req: express.Request, res: express.Response) =
 export const deleteRequest = async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
-    if (!id) {
+    const requestId = Array.isArray(id) ? id[0] : id;
+    if (!requestId) {
       return res.status(400).json({
         success: false,
         message: 'Request ID is required',
@@ -123,7 +124,7 @@ export const deleteRequest = async (req: express.Request, res: express.Response)
     }
 
     // Check if request exists
-    const requestRef = db.collection('requests').doc(id);
+    const requestRef = db.collection('requests').doc(requestId);
     const requestDoc = await requestRef.get();
 
     if (!requestDoc.exists) {
@@ -152,7 +153,8 @@ export const deleteRequest = async (req: express.Request, res: express.Response)
 export const updateRequestStatus = async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
-    if (!id) {
+    const requestId = Array.isArray(id) ? id[0] : id;
+    if (!requestId) {
       return res.status(400).json({
         success: false,
         message: 'Request ID is required',
@@ -170,7 +172,7 @@ export const updateRequestStatus = async (req: express.Request, res: express.Res
     }
 
     // Check if request exists
-    const requestRef = db.collection('requests').doc(id);
+    const requestRef = db.collection('requests').doc(requestId);
     const requestDoc = await requestRef.get();
 
     if (!requestDoc.exists) {

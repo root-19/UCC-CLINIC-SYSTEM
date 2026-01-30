@@ -115,7 +115,8 @@ export const getAnnouncementByCategory = async (req: express.Request, res: expre
 export const updateAnnouncement = async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
-    if (!id) {
+    const announcementId = Array.isArray(id) ? id[0] : id;
+    if (!announcementId) {
       return res.status(400).json({
         success: false,
         message: 'Announcement ID is required',
@@ -133,7 +134,7 @@ export const updateAnnouncement = async (req: express.Request, res: express.Resp
     }
 
     // Check if announcement exists
-    const itemRef = db.collection('announcement').doc(id);
+    const itemRef = db.collection('announcement').doc(announcementId);
     const itemDoc = await itemRef.get();
 
     if (!itemDoc.exists) {
@@ -181,7 +182,8 @@ export const updateAnnouncement = async (req: express.Request, res: express.Resp
 export const deleteAnnouncement = async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
-    if (!id) {
+    const announcementId = Array.isArray(id) ? id[0] : id;
+    if (!announcementId) {
       return res.status(400).json({
         success: false,
         message: 'Announcement ID is required',
@@ -189,7 +191,7 @@ export const deleteAnnouncement = async (req: express.Request, res: express.Resp
     }
 
     // Check if announcement exists
-    const itemRef = db.collection('announcement').doc(id);
+    const itemRef = db.collection('announcement').doc(announcementId);
     const itemDoc = await itemRef.get();
 
     if (!itemDoc.exists) {

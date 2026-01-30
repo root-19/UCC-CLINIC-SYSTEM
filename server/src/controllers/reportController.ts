@@ -30,7 +30,7 @@ export const getMonthlyMedicationReports = async (req: express.Request, res: exp
         ...data,
         requestDate: data.requestDate?.toDate ? data.requestDate.toDate() : (data.requestDate ? new Date(data.requestDate) : null),
         createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : (data.createdAt ? new Date(data.createdAt) : new Date()),
-      };
+      } as any;
     });
 
     // Process registrations
@@ -40,7 +40,7 @@ export const getMonthlyMedicationReports = async (req: express.Request, res: exp
         id: doc.id,
         ...data,
         createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : (data.createdAt ? new Date(data.createdAt) : new Date()),
-      };
+      } as any;
     });
 
     // Filter by year and month if provided
