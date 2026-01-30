@@ -48,6 +48,7 @@ const RegistrationStudent = () => {
   const [error, setError] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [viewRecordsModalOpen, setViewRecordsModalOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<RegistrationForm | null>(null);
 
@@ -245,6 +246,302 @@ const RegistrationStudent = () => {
     } finally {
       setUpdatingId(null);
     }
+  };
+
+  const handleDelete = async (registrationId: string, studentName: string) => {
+    if (!window.confirm(`Are you sure you want to delete the record for ${studentName}? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      setDeletingId(registrationId);
+      const response = await fetch(`${env.API_URL}/api/registrations/${registrationId}`, {
+        method: 'DELETE',
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Remove the registration from the local state
+        setRegistrations(registrations.filter(reg => reg.id !== registrationId));
+        alert('Student record deleted successfully');
+      } else {
+        alert(data.message || 'Failed to delete record');
+      }
+    } catch (err) {
+      console.error('Error deleting registration:', err);
+      alert('Network error. Please try again.');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const handlePrint = (registration: RegistrationForm) => {
+    // Create a new window for printing
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      alert('Please allow pop-ups to print the record');
+      return;
+    }
+
+    // Format the date
+    const formatDateForPrint = (timestamp: any) => {
+      if (!timestamp) return 'N/A';
+      const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
+    };
+
+    // Create HTML content for printing
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Student Record - ${registration.fullname}</title>
+          <style>
+            @media print {
+              @page {
+                margin: 1cm;
+              }
+            }
+            body {
+              font-family: Arial, sans-serif;
+              line-height: 1.6;
+              color: #333;
+              max-width: 800px;
+              margin: 0 auto;
+              padding: 20px;
+            }
+            .header {
+              text-align: center;
+              border-bottom: 3px solid #10B981;
+              padding-bottom: 20px;
+              margin-bottom: 30px;
+            }
+            .header h1 {
+              color: #10B981;
+              margin: 0;
+              font-size: 28px;
+            }
+            .header p {
+              margin: 5px 0;
+              color: #666;
+            }
+            .section {
+              margin-bottom: 25px;
+              page-break-inside: avoid;
+            }
+            .section-title {
+              background-color: #10B981;
+              color: white;
+              padding: 10px 15px;
+              margin: 0 -20px 15px -20px;
+              font-size: 18px;
+              font-weight: bold;
+            }
+            .info-grid {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 15px;
+              margin-bottom: 15px;
+            }
+            .info-item {
+              margin-bottom: 10px;
+            }
+            .info-label {
+              font-weight: bold;
+              color: #555;
+              margin-bottom: 5px;
+            }
+            .info-value {
+              color: #333;
+              padding: 5px;
+              background-color: #f9f9f9;
+              border-left: 3px solid #10B981;
+              padding-left: 10px;
+            }
+            .full-width {
+              grid-column: 1 / -1;
+            }
+            .status-badge {
+              display: inline-block;
+              padding: 5px 15px;
+              border-radius: 20px;
+              font-weight: bold;
+              font-size: 14px;
+            }
+            .status-active {
+              background-color: #D1FAE5;
+              color: #065F46;
+            }
+            .status-inactive {
+              background-color: #F3F4F6;
+              color: #374151;
+            }
+            .footer {
+              margin-top: 40px;
+              padding-top: 20px;
+              border-top: 2px solid #e5e7eb;
+              text-align: center;
+              color: #666;
+              font-size: 12px;
+            }
+            @media print {
+              .no-print {
+                display: none;
+              }
+              button {
+                display: none;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>STUDENT REGISTRATION RECORD</h1>
+            <p>University Medical Clinic</p>
+            <p>Printed on: ${new Date().toLocaleString('en-US')}</p>
+          </div>
+
+          <div class="section">
+            <div class="section-title">1. Student Information</div>
+            <div class="info-grid">
+              <div class="info-item">
+                <div class="info-label">Full Name</div>
+                <div class="info-value">${registration.fullname || 'N/A'}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Student ID / LRN</div>
+                <div class="info-value">${registration.studentIdLrn || 'N/A'}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">First Name</div>
+                <div class="info-value">${registration.firstName || 'N/A'}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Middle Name</div>
+                <div class="info-value">${registration.middleName || 'N/A'}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Last Name</div>
+                <div class="info-value">${registration.lastName || 'N/A'}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">School ID Number</div>
+                <div class="info-value">${registration.schoolIdNumber || 'N/A'}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Age</div>
+                <div class="info-value">${registration.age || 'N/A'}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Date of Birth</div>
+                <div class="info-value">${registration.dateOfBirth || 'N/A'}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Sex</div>
+                <div class="info-value">${registration.sex || 'N/A'}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Course & Year</div>
+                <div class="info-value">${registration.courseYear || 'N/A'}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Year & Section</div>
+                <div class="info-value">${registration.yearSection || 'N/A'}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Department/Course</div>
+                <div class="info-value">${registration.departmentCourse || 'N/A'}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Contact Number</div>
+                <div class="info-value">${registration.contactNumber || 'N/A'}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Status</div>
+                <div class="info-value">
+                  <span class="status-badge ${registration.status === 'active' ? 'status-active' : 'status-inactive'}">
+                    ${registration.status === 'active' ? 'Active' : 'Inactive'}
+                  </span>
+                </div>
+              </div>
+              <div class="info-item full-width">
+                <div class="info-label">Address</div>
+                <div class="info-value">${registration.address || 'N/A'}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">2. Parent/Guardian Information</div>
+            <div class="info-grid">
+              <div class="info-item">
+                <div class="info-label">Parent/Guardian Name</div>
+                <div class="info-value">${registration.parentGuardianName || 'N/A'}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Parent/Guardian Contact</div>
+                <div class="info-value">${registration.parentGuardianContact || 'N/A'}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">3. Health History</div>
+            <div class="info-grid">
+              <div class="info-item full-width">
+                <div class="info-label">Immunization Records</div>
+                <div class="info-value">${registration.immunizationRecords || 'N/A'}</div>
+              </div>
+              <div class="info-item full-width">
+                <div class="info-label">Previous Check-up Records</div>
+                <div class="info-value">${registration.previousCheckupRecords || 'N/A'}</div>
+              </div>
+              <div class="info-item full-width">
+                <div class="info-label">Previous Injuries / Hospitalizations</div>
+                <div class="info-value">${registration.previousInjuriesHospitalizations || 'N/A'}</div>
+              </div>
+              <div class="info-item full-width">
+                <div class="info-label">Chronic Illnesses</div>
+                <div class="info-value">${registration.chronicIllnesses || 'N/A'}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">4. Record Information</div>
+            <div class="info-grid">
+              <div class="info-item">
+                <div class="info-label">Date Registered</div>
+                <div class="info-value">${formatDateForPrint(registration.createdAt)}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Last Updated</div>
+                <div class="info-value">${formatDateForPrint(registration.updatedAt)}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="footer">
+            <p>This is an official document from the University Medical Clinic</p>
+            <p>Record ID: ${registration.id}</p>
+          </div>
+
+          <script>
+            window.onload = function() {
+              window.print();
+            };
+          </script>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(printContent);
+    printWindow.document.close();
   };
 
 
@@ -782,30 +1079,47 @@ const RegistrationStudent = () => {
                           </p>
                         </div>
                         {/* Action Buttons */}
-                        <div className="mt-4 flex gap-2">
-                          <button
-                            onClick={() => handleViewRecord(registration)}
-                            className="flex-1 px-3 py-2 bg-clinic-green text-white rounded-lg hover:bg-clinic-green-hover transition-colors text-sm font-medium"
-                          >
-                            View Record
-                          </button>
-                          {registration.status === 'active' ? (
+                        <div className="mt-4 flex flex-col gap-2">
+                          <div className="flex gap-2">
                             <button
-                              onClick={() => handleUpdateStatus(registration.id, 'inactive')}
-                              disabled={updatingId === registration.id}
-                              className="flex-1 px-3 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-sm font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
+                              onClick={() => handleViewRecord(registration)}
+                              className="flex-1 px-3 py-2 bg-clinic-green text-white rounded-lg hover:bg-clinic-green-hover transition-colors text-sm font-medium"
                             >
-                              {updatingId === registration.id ? 'Updating...' : 'Set Inactive'}
+                              View Record
                             </button>
-                          ) : (
                             <button
-                              onClick={() => handleUpdateStatus(registration.id, 'active')}
-                              disabled={updatingId === registration.id}
-                              className="flex-1 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
+                              onClick={() => handlePrint(registration)}
+                              className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
                             >
-                              {updatingId === registration.id ? 'Updating...' : 'Set Active'}
+                              Print
                             </button>
-                          )}
+                          </div>
+                          <div className="flex gap-2">
+                            {registration.status === 'active' ? (
+                              <button
+                                onClick={() => handleUpdateStatus(registration.id, 'inactive')}
+                                disabled={updatingId === registration.id}
+                                className="flex-1 px-3 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-sm font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
+                              >
+                                {updatingId === registration.id ? 'Updating...' : 'Set Inactive'}
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => handleUpdateStatus(registration.id, 'active')}
+                                disabled={updatingId === registration.id}
+                                className="flex-1 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
+                              >
+                                {updatingId === registration.id ? 'Updating...' : 'Set Active'}
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleDelete(registration.id, registration.fullname)}
+                              disabled={deletingId === registration.id}
+                              className="flex-1 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
+                            >
+                              {deletingId === registration.id ? 'Deleting...' : 'Delete'}
+                            </button>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -866,13 +1180,20 @@ const RegistrationStudent = () => {
                             {getStatusBadge(registration.status || 'active')}
                           </td>
                           <td className="border border-gray-300 px-4 py-3">
-                            <div className="flex gap-2">
+                            <div className="flex flex-wrap gap-2">
                               <button
                                 onClick={() => handleViewRecord(registration)}
                                 className="px-3 py-1 bg-clinic-green text-white rounded hover:bg-clinic-green-hover transition-colors text-xs font-medium"
                                 title="View Record"
                               >
-                                View Record
+                                View
+                              </button>
+                              <button
+                                onClick={() => handlePrint(registration)}
+                                className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-xs font-medium"
+                                title="Print Record"
+                              >
+                                Print
                               </button>
                               {registration.status === 'active' ? (
                                 <button
@@ -893,6 +1214,14 @@ const RegistrationStudent = () => {
                                   {updatingId === registration.id ? '...' : 'Active'}
                                 </button>
                               )}
+                              <button
+                                onClick={() => handleDelete(registration.id, registration.fullname)}
+                                disabled={deletingId === registration.id}
+                                className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-xs font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                title="Delete Record"
+                              >
+                                {deletingId === registration.id ? '...' : 'Delete'}
+                              </button>
                             </div>
                           </td>
                         </tr>
