@@ -83,7 +83,7 @@ const ViewRecordsModal = ({ isOpen, onClose, studentId, studentData }: ViewRecor
     setShowAddRecord(true);
   };
 
-  const handleRecordAdded = () => {
+  const handleCloseAddRecord = () => {
     setShowAddRecord(false);
     fetchRecords();
   };
@@ -193,7 +193,7 @@ const ViewRecordsModal = ({ isOpen, onClose, studentId, studentData }: ViewRecor
       {showAddRecord && (
         <MedicalRecordModal
           isOpen={showAddRecord}
-          onClose={() => setShowAddRecord(false)}
+          onClose={handleCloseAddRecord}
           studentId={studentId}
           studentData={studentData}
         />

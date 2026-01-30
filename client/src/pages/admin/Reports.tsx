@@ -239,10 +239,11 @@ const Reports = () => {
                           />
                           <YAxis />
                           <Tooltip 
-                            formatter={(value: number, name: string) => {
-                              if (name === 'requests') return [`${value} requests`, 'Request Forms'];
-                              if (name === 'registrations') return [`${value} records`, 'Student Records'];
-                              return [`${value} total`, 'Total'];
+                            formatter={(value: number | undefined, name: string) => {
+                              const numValue = value ?? 0;
+                              if (name === 'requests') return [`${numValue} requests`, 'Request Forms'];
+                              if (name === 'registrations') return [`${numValue} records`, 'Student Records'];
+                              return [`${numValue} total`, 'Total'];
                             }}
                             labelFormatter={(label) => `Month: ${formatMonthLabel(label)}`}
                           />
